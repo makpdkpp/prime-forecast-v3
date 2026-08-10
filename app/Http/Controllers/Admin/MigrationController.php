@@ -67,13 +67,13 @@ class MigrationController extends Controller
             ]);
         } catch (\Exception $e) {
             ob_end_clean();
+            report($e);
             
             $this->logMigration('run_all', null, $e->getMessage(), 'failed');
             
             return response()->json([
                 'success' => false,
-                'message' => 'Migration failed: ' . $e->getMessage(),
-                'error' => $e->getMessage()
+                'message' => 'Migration failed. Check the server log for details.'
             ], 500);
         }
     }
@@ -109,13 +109,13 @@ class MigrationController extends Controller
             ]);
         } catch (\Exception $e) {
             ob_end_clean();
+            report($e);
             
             $this->logMigration('run_single', $migration, $e->getMessage(), 'failed');
             
             return response()->json([
                 'success' => false,
-                'message' => 'Migration failed: ' . $e->getMessage(),
-                'error' => $e->getMessage()
+                'message' => 'Migration failed. Check the server log for details.'
             ], 500);
         }
     }
@@ -147,13 +147,13 @@ class MigrationController extends Controller
             ]);
         } catch (\Exception $e) {
             ob_end_clean();
+            report($e);
             
             $this->logMigration('rollback', null, $e->getMessage(), 'failed');
             
             return response()->json([
                 'success' => false,
-                'message' => 'Rollback failed: ' . $e->getMessage(),
-                'error' => $e->getMessage()
+                'message' => 'Rollback failed. Check the server log for details.'
             ], 500);
         }
     }
@@ -190,9 +190,10 @@ class MigrationController extends Controller
                 'schema' => $schema
             ]);
         } catch (\Exception $e) {
+            report($e);
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to retrieve schema: ' . $e->getMessage()
+                'message' => 'Failed to retrieve schema. Check the server log for details.'
             ], 500);
         }
     }

@@ -30,8 +30,7 @@ Route::post('/forgot-password', [AuthController::class, 'sendResetPasswordLink']
 Route::get('/reset-password/{token}', [AuthController::class, 'showResetPasswordForm'])->name('password.reset');
 Route::post('/reset-password/{token}', [AuthController::class, 'resetPassword'])->name('password.update');
 Route::get('/post-login-loading', [AuthController::class, 'postLoginLoading'])->name('postlogin.loading');
-Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
-Route::post('/logout', [AuthController::class, 'logout']);
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Registration routes (user invitation)
 Route::get('/register/{token}', [RegistrationController::class, 'showRegistrationForm'])->name('register');
@@ -89,14 +88,16 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/reports/windate', [AdminController::class, 'reportWindate'])->name('reports.windate');
         Route::post('/reports/windate/data', [AdminController::class, 'reportWindateData'])->name('reports.windate.data');
         
-        // Migration Management (for shared hosting without SSH)
-        Route::get('/migration', [\App\Http\Controllers\Admin\MigrationController::class, 'index'])->name('migration.index');
-        Route::get('/migration/status', [\App\Http\Controllers\Admin\MigrationController::class, 'status'])->name('migration.status');
-        Route::post('/migration/run', [\App\Http\Controllers\Admin\MigrationController::class, 'run'])->name('migration.run');
-        Route::post('/migration/run-single/{migration}', [\App\Http\Controllers\Admin\MigrationController::class, 'runSingle'])->name('migration.run-single');
-        Route::post('/migration/rollback', [\App\Http\Controllers\Admin\MigrationController::class, 'rollback'])->name('migration.rollback');
-        Route::get('/migration/schema', [\App\Http\Controllers\Admin\MigrationController::class, 'schema'])->name('migration.schema');
-        Route::get('/migration/logs', [\App\Http\Controllers\Admin\MigrationController::class, 'logs'])->name('migration.logs');
+        // Migration management is deliberately absent from production routes.
+        if (!app()->isProduction()) {
+            Route::get('/migration', [\App\Http\Controllers\Admin\MigrationController::class, 'index'])->name('migration.index');
+            Route::get('/migration/status', [\App\Http\Controllers\Admin\MigrationController::class, 'status'])->name('migration.status');
+            Route::post('/migration/run', [\App\Http\Controllers\Admin\MigrationController::class, 'run'])->name('migration.run');
+            Route::post('/migration/run-single/{migration}', [\App\Http\Controllers\Admin\MigrationController::class, 'runSingle'])->name('migration.run-single');
+            Route::post('/migration/rollback', [\App\Http\Controllers\Admin\MigrationController::class, 'rollback'])->name('migration.rollback');
+            Route::get('/migration/schema', [\App\Http\Controllers\Admin\MigrationController::class, 'schema'])->name('migration.schema');
+            Route::get('/migration/logs', [\App\Http\Controllers\Admin\MigrationController::class, 'logs'])->name('migration.logs');
+        }
     });
     
     // Team Admin routes (role_id = 2)

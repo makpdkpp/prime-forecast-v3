@@ -396,6 +396,10 @@
         return {{ auth()->id() }};
     }
 
+    function escapeHtml(value) {
+        return $('<div>').text(value ?? '-').html();
+    }
+
     function showChartDetail(type, value, title, value2) {
         const modal = $('#chartDetailModal');
         const loading = $('#chartDetailLoading');
@@ -433,14 +437,14 @@
                     sumValue += val;
                     tbody.append(`<tr>
                         <td>${i + 1}</td>
-                        <td>${p.Product_detail || '-'}</td>
-                        <td>${p.company || '-'}</td>
-                        <td>${p.product_group || '-'}</td>
-                        <td>${p.team || '-'}</td>
-                        <td>${p.step_name || '-'}</td>
-                        <td>${p.win_date || '-'}</td>
+                        <td>${escapeHtml(p.Product_detail)}</td>
+                        <td>${escapeHtml(p.company)}</td>
+                        <td>${escapeHtml(p.product_group)}</td>
+                        <td>${escapeHtml(p.team)}</td>
+                        <td>${escapeHtml(p.step_name)}</td>
+                        <td>${escapeHtml(p.win_date)}</td>
                         <td class="text-right">${val.toLocaleString('th-TH', {minimumFractionDigits: 2})}</td>
-                        <td>${p.contact_start_date || '-'}</td>
+                        <td>${escapeHtml(p.contact_start_date)}</td>
                     </tr>`);
                 });
                 total.text(sumValue.toLocaleString('th-TH', {minimumFractionDigits: 2}));
@@ -486,11 +490,11 @@
                     sumValue += val;
                     tbody.append(`<tr>
                         <td>${i + 1}</td>
-                        <td>${p.Product_detail || '-'}</td>
-                        <td>${p.company || '-'}</td>
-                        <td>${p.product_group || '-'}</td>
+                        <td>${escapeHtml(p.Product_detail)}</td>
+                        <td>${escapeHtml(p.company)}</td>
+                        <td>${escapeHtml(p.product_group)}</td>
                         <td class="text-right">${val.toLocaleString('th-TH', {minimumFractionDigits: 2})}</td>
-                        <td>${p.win_date || '-'}</td>
+                        <td>${escapeHtml(p.win_date)}</td>
                     </tr>`);
                 });
                 total.text(sumValue.toLocaleString('th-TH', {minimumFractionDigits: 2}));

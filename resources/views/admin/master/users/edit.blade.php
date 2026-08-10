@@ -25,7 +25,7 @@
                     <div class="col-md-6">
                         <div class="form-group">
                             <label for="password">Password (เว้นว่างถ้าไม่ต้องการเปลี่ยน)</label>
-                            <input type="password" name="password" id="password" class="form-control @error('password') is-invalid @enderror">
+                            <input type="password" name="password" id="password" class="form-control @error('password') is-invalid @enderror" minlength="12">
                             @error('password')
                                 <span class="invalid-feedback">{{ $message }}</span>
                             @enderror

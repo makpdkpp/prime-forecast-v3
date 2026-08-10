@@ -855,20 +855,30 @@ class AdminController extends Controller
         // Validation
         $request->validate([
             'Product_detail' => 'required|max:255',
-            'company_id' => 'required|integer',
+            'company_id' => 'required|integer|exists:company_catalog,company_id',
             'product_value' => 'required',
-            'Source_budget_id' => 'required|integer',
+            'Source_budget_id' => 'required|integer|exists:source_of_the_budget,Source_budget_id',
             'fiscalyear' => 'required|integer',
-            'Product_id' => 'required|integer',
-            'team_id' => 'required|integer',
-            'user_id' => 'required|integer',
-            'priority_id' => 'nullable|integer',
+            'Product_id' => 'required|integer|exists:product_group,product_id',
+            'team_id' => 'required|integer|exists:team_catalog,team_id',
+            'user_id' => 'required|integer|exists:user,user_id',
+            'priority_id' => 'nullable|integer|exists:priority_level,priority_id',
             'contact_start_date' => 'required|date',
             'date_of_closing_of_sale' => 'nullable|date',
             'sales_can_be_close' => 'nullable|date',
             'step_date' => 'nullable|array',
             'step_date.*' => 'nullable|date',
         ]);
+
+        abort_unless(
+            DB::table('user')->where('user_id', $request->integer('user_id'))->where('role_id', 3)->exists()
+            && DB::table('transactional_team')
+                ->where('user_id', $request->integer('user_id'))
+                ->where('team_id', $request->integer('team_id'))
+                ->exists(),
+            422,
+            'The selected owner must be a user assigned to the selected team.'
+        );
 
         try {
             // Remove comma from product_value
@@ -931,7 +941,8 @@ class AdminController extends Controller
                 return redirect()->route('admin.dashboard.table')->with('success', 'อัพเดทข้อมูลเรียบร้อยแล้ว');
             }
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
+            report($e);
+            return redirect()->back()->with('error', 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
         }
     }
 
@@ -952,7 +963,8 @@ class AdminController extends Controller
 
             return redirect()->route('admin.dashboard.table')->with('success', 'ลบข้อมูลเรียบร้อยแล้ว');
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
+            report($e);
+            return redirect()->back()->with('error', 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
         }
     }
 
@@ -1014,7 +1026,8 @@ class AdminController extends Controller
             return redirect()->route('admin.dashboard.table')->with('success', 'โอนข้อมูลเรียบร้อยแล้ว');
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->with('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
+            report($e);
+            return redirect()->back()->with('error', 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
         }
     }
 
@@ -1096,15 +1109,30 @@ class AdminController extends Controller
 
             return redirect()->route('admin.profile')->with('success', 'อัปเดตโปรไฟล์เรียบร้อยแล้ว');
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
+            report($e);
+            return redirect()->back()->with('error', 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
         }
     }
 
     public function toggleTwoFactor(\Illuminate\Http\Request $request)
     {
         $user = auth()->user();
+
+        $request->validate(['enabled' => 'required|boolean']);
+        $enabled = $request->boolean('enabled');
+
+        if ($user->two_factor_enabled && !$enabled) {
+            $request->validate(['current_password' => 'required|string']);
+
+            if (!$user->verifyCurrentPassword($request->current_password)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'รหัสผ่านปัจจุบันไม่ถูกต้อง',
+                ], 422);
+            }
+        }
         
-        $user->two_factor_enabled = !$user->two_factor_enabled;
+        $user->two_factor_enabled = $enabled;
         $user->save();
         
         $status = $user->two_factor_enabled ? 'เปิด' : 'ปิด';

@@ -80,6 +80,28 @@ class User extends Authenticatable
         return $this->two_factor_enabled;
     }
 
+    public function verifyCurrentPassword(string $plainTextPassword): bool
+    {
+        $stored = (string) $this->password;
+
+        if ($stored === '') {
+            return false;
+        }
+
+        if (strlen($stored) === 32 && ctype_xdigit($stored)) {
+            $isLegacyMd5 = hash_equals(strtolower($stored), md5($plainTextPassword));
+
+            if ($isLegacyMd5) {
+                $this->password = \Illuminate\Support\Facades\Hash::make($plainTextPassword);
+                $this->save();
+            }
+
+            return $isLegacyMd5;
+        }
+
+        return \Illuminate\Support\Facades\Hash::check($plainTextPassword, $stored);
+    }
+
     /**
      * Generate a new 2FA code
      */

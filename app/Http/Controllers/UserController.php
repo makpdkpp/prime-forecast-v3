@@ -433,19 +433,21 @@ class UserController extends Controller
         // Validation - simplified for better performance
         $validated = $request->validate([
             'Product_detail' => 'required|max:255',
-            'company_id' => 'required|integer',
+            'company_id' => 'required|integer|exists:company_catalog,company_id',
             'product_value' => 'required',
-            'Source_budget_id' => 'required|integer',
+            'Source_budget_id' => 'required|integer|exists:source_of_the_budget,Source_budget_id',
             'fiscalyear' => 'required|integer',
-            'Product_id' => 'required|integer',
-            'team_id' => 'required|integer',
-            'priority_id' => 'nullable|integer',
+            'Product_id' => 'required|integer|exists:product_group,product_id',
+            'team_id' => 'required|integer|exists:team_catalog,team_id',
+            'priority_id' => 'nullable|integer|exists:priority_level,priority_id',
             'contact_start_date' => 'required|date',
             'date_of_closing_of_sale' => 'nullable|date',
             'sales_can_be_close' => 'nullable|date',
             'step_date' => 'nullable|array',
             'step_date.*' => 'nullable|date',
         ]);
+
+        abort_unless($this->currentUserBelongsToTeam((int) $validated['team_id']), 403);
 
         // Remove comma from product_value and convert to number
         $productValue = str_replace(',', '', $request->product_value);
@@ -600,13 +602,13 @@ class UserController extends Controller
 
         $validator = \Validator::make($request->all(), [
             'Product_detail'           => 'required|max:255',
-            'company_id'               => 'required|integer',
+            'company_id'               => 'required|integer|exists:company_catalog,company_id',
             'product_value'            => 'required',
-            'Source_budget_id'         => 'required|integer',
+            'Source_budget_id'         => 'required|integer|exists:source_of_the_budget,Source_budget_id',
             'fiscalyear'               => 'required|integer',
-            'Product_id'               => 'required|integer',
-            'team_id'                  => 'required|integer',
-            'priority_id'              => 'nullable|integer',
+            'Product_id'               => 'required|integer|exists:product_group,product_id',
+            'team_id'                  => 'required|integer|exists:team_catalog,team_id',
+            'priority_id'              => 'nullable|integer|exists:priority_level,priority_id',
             'contact_start_date'       => 'required|date',
             'date_of_closing_of_sale'  => 'nullable|date',
             'sales_can_be_close'       => 'nullable|date',
@@ -617,6 +619,8 @@ class UserController extends Controller
         if ($validator->fails()) {
             return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
         }
+
+        abort_unless($this->currentUserBelongsToTeam((int) $request->team_id), 403);
 
         try {
             $productValue = str_replace(',', '', $request->product_value);
@@ -664,7 +668,8 @@ class UserController extends Controller
 
             return response()->json(['success' => true, 'message' => 'อัพเดทข้อมูลเรียบร้อยแล้ว']);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'เกิดข้อผิดพลาด: ' . $e->getMessage()], 500);
+            report($e);
+            return response()->json(['success' => false, 'message' => 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง'], 500);
         }
     }
 
@@ -676,19 +681,21 @@ class UserController extends Controller
         
         $request->validate([
             'Product_detail' => 'required|max:255',
-            'company_id' => 'required|integer',
+            'company_id' => 'required|integer|exists:company_catalog,company_id',
             'product_value' => 'required',
-            'Source_budget_id' => 'required|integer',
+            'Source_budget_id' => 'required|integer|exists:source_of_the_budget,Source_budget_id',
             'fiscalyear' => 'required|integer',
-            'Product_id' => 'required|integer',
-            'team_id' => 'required|integer',
-            'priority_id' => 'nullable|integer',
+            'Product_id' => 'required|integer|exists:product_group,product_id',
+            'team_id' => 'required|integer|exists:team_catalog,team_id',
+            'priority_id' => 'nullable|integer|exists:priority_level,priority_id',
             'contact_start_date' => 'required|date',
             'date_of_closing_of_sale' => 'nullable|date',
             'sales_can_be_close' => 'nullable|date',
             'step_date' => 'nullable|array',
             'step_date.*' => 'nullable|date',
         ]);
+
+        abort_unless($this->currentUserBelongsToTeam((int) $request->team_id), 403);
 
         try {
             $productValue = str_replace(',', '', $request->product_value);
@@ -737,7 +744,8 @@ class UserController extends Controller
 
             return redirect()->route('user.dashboard.table')->with('success', 'อัพเดทข้อมูลเรียบร้อยแล้ว');
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
+            report($e);
+            return redirect()->back()->with('error', 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
         }
     }
 
@@ -754,9 +762,22 @@ class UserController extends Controller
     public function toggleTwoFactor(Request $request)
     {
         $user = auth()->user();
+
+        $request->validate(['enabled' => 'required|boolean']);
+        $enabled = $request->boolean('enabled');
+
+        if ($user->two_factor_enabled && !$enabled) {
+            $request->validate(['current_password' => 'required|string']);
+
+            if (!$user->verifyCurrentPassword($request->current_password)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'รหัสผ่านปัจจุบันไม่ถูกต้อง',
+                ], 422);
+            }
+        }
         
-        // Toggle 2FA status
-        $user->two_factor_enabled = !$user->two_factor_enabled;
+        $user->two_factor_enabled = $enabled;
         $user->save();
         
         $status = $user->two_factor_enabled ? 'เปิด' : 'ปิด';
@@ -825,7 +846,8 @@ class UserController extends Controller
 
             return redirect()->route('user.profile')->with('success', 'บันทึกข้อมูลสำเร็จ');
         } catch (\Exception $e) {
-            return redirect()->route('user.profile')->with('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
+            report($e);
+            return redirect()->route('user.profile')->with('error', 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
         }
     }
 
@@ -884,9 +906,10 @@ class UserController extends Controller
             ]);
 
         } catch (\Exception $e) {
+            report($e);
             return response()->json([
                 'success' => false,
-                'message' => 'เกิดข้อผิดพลาด: ' . $e->getMessage()
+                'message' => 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง'
             ], 500);
         }
     }
@@ -1081,5 +1104,13 @@ class UserController extends Controller
 
         $where .= " AND QUARTER({$table}.{$column}) = ?";
         $params[] = $quarter;
+    }
+
+    private function currentUserBelongsToTeam(int $teamId): bool
+    {
+        return TransactionalTeam::query()
+            ->where('user_id', auth()->id())
+            ->where('team_id', $teamId)
+            ->exists();
     }
 }

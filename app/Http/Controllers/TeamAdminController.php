@@ -946,15 +946,30 @@ class TeamAdminController extends Controller
 
             return redirect()->route('teamadmin.profile')->with('success', 'อัปเดตโปรไฟล์เรียบร้อยแล้ว');
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
+            report($e);
+            return redirect()->back()->with('error', 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
         }
     }
 
     public function toggleTwoFactor(\Illuminate\Http\Request $request)
     {
         $user = auth()->user();
+
+        $request->validate(['enabled' => 'required|boolean']);
+        $enabled = $request->boolean('enabled');
+
+        if ($user->two_factor_enabled && !$enabled) {
+            $request->validate(['current_password' => 'required|string']);
+
+            if (!$user->verifyCurrentPassword($request->current_password)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'รหัสผ่านปัจจุบันไม่ถูกต้อง',
+                ], 422);
+            }
+        }
         
-        $user->two_factor_enabled = !$user->two_factor_enabled;
+        $user->two_factor_enabled = $enabled;
         $user->save();
         
         $status = $user->two_factor_enabled ? 'เปิด' : 'ปิด';
@@ -1045,20 +1060,31 @@ class TeamAdminController extends Controller
         // Validation
         $request->validate([
             'Product_detail' => 'required|max:255',
-            'company_id' => 'required|integer',
+            'company_id' => 'required|integer|exists:company_catalog,company_id',
             'product_value' => 'required',
-            'Source_budget_id' => 'required|integer',
+            'Source_budget_id' => 'required|integer|exists:source_of_the_budget,Source_budget_id',
             'fiscalyear' => 'required|integer',
-            'Product_id' => 'required|integer',
-            'team_id' => 'required|integer',
-            'user_id' => 'required|integer',
-            'priority_id' => 'nullable|integer',
+            'Product_id' => 'required|integer|exists:product_group,product_id',
+            'team_id' => 'required|integer|exists:team_catalog,team_id',
+            'user_id' => 'required|integer|exists:user,user_id',
+            'priority_id' => 'nullable|integer|exists:priority_level,priority_id',
             'contact_start_date' => 'required|date',
             'date_of_closing_of_sale' => 'nullable|date',
             'sales_can_be_close' => 'nullable|date',
             'step_date' => 'nullable|array',
             'step_date.*' => 'nullable|date',
         ]);
+
+        $targetTeamId = (int) $request->team_id;
+        $targetUserId = (int) $request->user_id;
+        $managedTeamIds = array_map('intval', $userTeams);
+
+        abort_unless(in_array($targetTeamId, $managedTeamIds, true), 403);
+        abort_unless(
+            DB::table('user')->where('user_id', $targetUserId)->where('role_id', 3)->exists()
+            && DB::table('transactional_team')->where('user_id', $targetUserId)->where('team_id', $targetTeamId)->exists(),
+            403
+        );
 
         try {
             $productValue = str_replace(',', '', $request->product_value);
@@ -1108,7 +1134,8 @@ class TeamAdminController extends Controller
 
             return redirect()->route('teamadmin.dashboard.table')->with('success', 'อัพเดทข้อมูลเรียบร้อยแล้ว');
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
+            report($e);
+            return redirect()->back()->with('error', 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
         }
     }
 
@@ -1126,11 +1153,13 @@ class TeamAdminController extends Controller
     private function getTeamUsers(array $teamIds): \Illuminate\Support\Collection
     {
         return DB::table('user')
-            ->select('user_id', 'nname', 'surename', 'is_active')
-            ->where('role_id', 3)
-            ->whereIn('team_id', $teamIds)
-            ->orderBy('nname')
-            ->orderBy('surename')
+            ->join('transactional_team as tt', 'tt.user_id', '=', 'user.user_id')
+            ->select('user.user_id', 'user.nname', 'user.surename', 'user.is_active')
+            ->where('user.role_id', 3)
+            ->whereIn('tt.team_id', $teamIds)
+            ->distinct()
+            ->orderBy('user.nname')
+            ->orderBy('user.surename')
             ->get();
     }
 

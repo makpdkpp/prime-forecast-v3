@@ -63,7 +63,7 @@
             <form action="{{ route('register.submit', $token) }}" method="post">
                 @csrf
                 <div class="input-group mb-3">
-                    <input type="password" name="password" class="form-control @error('password') is-invalid @enderror" placeholder="รหัสผ่าน (อย่างน้อย 6 ตัวอักษร)" required>
+                    <input type="password" name="password" class="form-control @error('password') is-invalid @enderror" placeholder="รหัสผ่าน (อย่างน้อย 12 ตัวอักษร)" minlength="12" required>
                     <div class="input-group-append">
                         <div class="input-group-text">
                             <span class="fas fa-lock"></span>

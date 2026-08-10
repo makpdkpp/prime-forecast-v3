@@ -343,19 +343,19 @@ $(function () {
             }
         },
         "columns": [
-            { data: 'project' },
-            { data: 'company' },
+            { data: 'project', render: $.fn.dataTable.render.text() },
+            { data: 'company', render: $.fn.dataTable.render.text() },
             { data: 'value', render: function(v){ return Number(v || 0).toLocaleString('th-TH'); } },
-            { data: 'status' },
-            { data: 'priority' },
-            { data: 'year' },
+            { data: 'status', render: $.fn.dataTable.render.text() },
+            { data: 'priority', render: $.fn.dataTable.render.text() },
+            { data: 'year', render: $.fn.dataTable.render.text() },
             { data: 'start', render: function(v){ return formatThaiDate(v); } },
             { data: 'bidding', render: function(v){ return formatThaiDate(v); } },
             { data: 'contract', render: function(v){ return formatThaiDate(v); } },
-            { data: 'product' },
-            { data: 'user' },
-            { data: 'team' },
-            { data: 'remark' },
+            { data: 'product', render: $.fn.dataTable.render.text() },
+            { data: 'user', render: $.fn.dataTable.render.text() },
+            { data: 'team', render: $.fn.dataTable.render.text() },
+            { data: 'remark', render: $.fn.dataTable.render.text() },
             { data: 'action', orderable: false, searchable: false, className: 'text-center' }
         ],
         "buttons": [

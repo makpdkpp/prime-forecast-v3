@@ -173,11 +173,11 @@ $(function () {
         },
         "data": [],
         "columns": [
-            { data: 'project_name' },
-            { data: 'company_name' },
-            { data: 'value' },
-            { data: 'win_date' },
-            { data: 'user_name' }
+            { data: 'project_name', render: $.fn.dataTable.render.text() },
+            { data: 'company_name', render: $.fn.dataTable.render.text() },
+            { data: 'value', render: $.fn.dataTable.render.text() },
+            { data: 'win_date', render: $.fn.dataTable.render.text() },
+            { data: 'user_name', render: $.fn.dataTable.render.text() }
         ]
     });
 

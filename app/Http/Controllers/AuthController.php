@@ -66,7 +66,7 @@ class AuthController extends Controller
     {
         $data = $request->validate([
             'email' => ['required', 'email'],
-            'password' => ['required', 'string', 'min:6', 'confirmed'],
+            'password' => ['required', 'string', 'min:12', 'confirmed'],
         ]);
 
         $user = User::query()
@@ -246,9 +246,9 @@ class AuthController extends Controller
             return redirect()->route('login')->with('error', 'Session หมดอายุ กรุณา login ใหม่');
         }
         
-        // Check if OTP was recently sent (within last 60 seconds)
-        if ($user->two_factor_expires_at && $user->two_factor_expires_at->diffInSeconds(now()) < 240) {
-            // OTP was sent less than 60 seconds ago (5 min - 4 min = 1 min)
+        // A code expires after five minutes. Allow a resend after the first minute.
+        $resendAvailableAt = $user->two_factor_expires_at?->copy()->subMinutes(4);
+        if ($resendAvailableAt && now()->isBefore($resendAvailableAt)) {
             return back()->with('error', 'กรุณารอสักครู่ก่อนขอรหัส OTP ใหม่');
         }
         

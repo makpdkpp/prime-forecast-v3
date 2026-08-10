@@ -76,7 +76,8 @@
                     type="password"
                     name="password"
                     class="form-control @error('password') is-invalid @enderror"
-                    placeholder="อย่างน้อย 6 ตัวอักษร"
+                    placeholder="อย่างน้อย 12 ตัวอักษร"
+                    minlength="12"
                     required
                 >
                 @error('password')

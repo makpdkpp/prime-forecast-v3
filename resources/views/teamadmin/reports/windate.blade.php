@@ -145,7 +145,13 @@ $(function () {
         processing: true, serverSide: false, responsive: false, autoWidth: false,
         language: { processing:'กำลังดำเนินการ...', search:'ค้นหา:', lengthMenu:'แสดง _MENU_ รายการ', info:'แสดง _START_ ถึง _END_ จาก _TOTAL_ รายการ', infoEmpty:'แสดง 0 ถึง 0 จาก 0 รายการ', infoFiltered:'(กรองจาก _MAX_ รายการทั้งหมด)', zeroRecords:'ไม่พบข้อมูล', emptyTable:'ไม่มีข้อมูลในตาราง', paginate:{first:'หน้าแรก',previous:'ก่อนหน้า',next:'ถัดไป',last:'หน้าสุดท้าย'} },
         data: [],
-        columns: [ {data:'project_name'},{data:'company_name'},{data:'value'},{data:'win_date'},{data:'user_name'} ]
+        columns: [
+            {data:'project_name', render: $.fn.dataTable.render.text()},
+            {data:'company_name', render: $.fn.dataTable.render.text()},
+            {data:'value', render: $.fn.dataTable.render.text()},
+            {data:'win_date', render: $.fn.dataTable.render.text()},
+            {data:'user_name', render: $.fn.dataTable.render.text()}
+        ]
     });
     function loadData() {
         $.post('{{ route("teamadmin.reports.windate.data") }}', {

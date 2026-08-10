@@ -32,7 +32,7 @@ class RegistrationController extends Controller
         }
 
         $request->validate([
-            'password' => 'required|min:6|confirmed',
+            'password' => 'required|string|min:12|confirmed',
         ]);
 
         $user->update([

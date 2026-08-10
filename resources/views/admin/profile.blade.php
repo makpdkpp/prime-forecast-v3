@@ -129,6 +129,10 @@
                                 <i class="fas fa-info-circle"></i> 
                                 เมื่อเปิดใช้งาน คุณจะต้องกรอกรหัส OTP ที่ส่งไปยัง email ทุกครั้งที่ login
                             </small>
+                            <div id="twoFactorPasswordGroup" class="form-group mt-3 {{ $twoFactorEnabled ? '' : 'd-none' }}">
+                                <label for="twoFactorCurrentPassword">ยืนยันรหัสผ่านปัจจุบันก่อนปิด 2FA</label>
+                                <input type="password" id="twoFactorCurrentPassword" class="form-control" autocomplete="current-password">
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -166,6 +170,16 @@ function toggleTwoFactor(checkbox) {
     const statusText = isEnabled ? 'เปิดใช้งาน' : 'ปิดใช้งาน';
     const actionText = isEnabled ? 'เปิด' : 'ปิด';
     
+    const passwordInput = document.getElementById('twoFactorCurrentPassword');
+    const currentPassword = passwordInput ? passwordInput.value : '';
+
+    if (!isEnabled && !currentPassword) {
+        checkbox.checked = true;
+        alert('กรุณากรอกรหัสผ่านปัจจุบันก่อนปิด 2FA');
+        passwordInput.focus();
+        return;
+    }
+
     if (confirm('คุณต้องการ' + actionText + 'การใช้งาน 2FA หรือไม่?')) {
         // Send AJAX request
         fetch('{{ route("admin.profile.toggle-2fa") }}', {
@@ -174,16 +188,18 @@ function toggleTwoFactor(checkbox) {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
             },
-            body: JSON.stringify({ enabled: isEnabled })
+            body: JSON.stringify({ enabled: isEnabled, current_password: currentPassword })
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
                 document.getElementById('twoFactorStatus').textContent = statusText;
+                document.getElementById('twoFactorPasswordGroup').classList.toggle('d-none', !data.enabled);
+                passwordInput.value = '';
                 alert(data.message);
             } else {
                 checkbox.checked = !isEnabled;
-                alert('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
+                alert(data.message || 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
             }
         })
         .catch(error => {
