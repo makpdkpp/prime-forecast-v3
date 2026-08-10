@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>PrimeForecast — UX/UI Concepts</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <header class="showcase-header">
+    <div class="showcase-brand">
+      <span class="brand-mark">P</span>
+      <div><strong>PrimeForecast</strong><small>UX / UI Direction</small></div>
+    </div>
+    <div class="concept-switch" role="tablist" aria-label="เลือกรูปแบบ">
+      <button class="concept-tab active" data-concept="focus"><span>01</span> Focus Flow</button>
+      <button class="concept-tab" data-concept="insight"><span>02</span> Insight Canvas</button>
+      <button class="concept-tab" data-concept="pipeline"><span>03</span> Pipeline Workspace</button>
+    </div>
+    <div class="device-switch" aria-label="ขนาดหน้าจอ">
+      <button class="device-button active" data-device="desktop" title="Desktop">▰</button>
+      <button class="device-button" data-device="mobile" title="Mobile">▯</button>
+    </div>
+  </header>
+
+  <main class="showcase-main">
+    <section class="concept-intro active" data-panel="focus">
+      <div><span class="eyebrow">CONCEPT 01 · SALES FIRST</span><h1>Focus Flow</h1></div>
+      <p>แบบฟอร์มแบ่งเป็นช่วงสั้น ๆ มี progress และสรุปข้อมูลด้านข้าง เหมาะกับ Sales ที่ต้องเพิ่มข้อมูลบน PC ให้ครบและเร็ว</p>
+      <div class="tags"><span>แนะนำที่สุด</span><span>ลดข้อมูลตกหล่น</span><span>Desktop-first form</span></div>
+    </section>
+    <section class="concept-intro" data-panel="insight">
+      <div><span class="eyebrow">CONCEPT 02 · REPORT FIRST</span><h1>Insight Canvas</h1></div>
+      <p>Dashboard โล่งและมีลำดับสายตาชัด เริ่มจาก KPI สำคัญ ต่อด้วยแนวโน้มและสิ่งที่ต้องติดตาม เหมาะกับ Admin และ Team Admin</p>
+      <div class="tags"><span>Executive view</span><span>อ่านเร็ว</span><span>Report-driven</span></div>
+    </section>
+    <section class="concept-intro" data-panel="pipeline">
+      <div><span class="eyebrow">CONCEPT 03 · POWER USER</span><h1>Pipeline Workspace</h1></div>
+      <p>ตารางเป็นศูนย์กลาง ค้นหา กรอง และแก้ข้อมูลได้ในหน้าเดียว พร้อมมุมมอง card บนมือถือ เหมาะกับทีมที่ใช้งานระบบทุกวัน</p>
+      <div class="tags"><span>ข้อมูลหนาแน่น</span><span>Quick edit</span><span>Team workflow</span></div>
+    </section>
+
+    <div class="prototype-stage" data-device-view="desktop">
+      <div class="browser-chrome"><div class="browser-dots"><i></i><i></i><i></i></div><span>primeforecast.local</span><em>Prototype · ไม่เชื่อมข้อมูลจริง</em></div>
+
+      <article class="prototype focus-prototype active" data-prototype="focus">
+        <aside class="side-nav navy">
+          <div class="app-logo"><span>P</span><b>PrimeForecast</b></div>
+          <nav>
+            <a data-sales-nav="dashboard"><i>⌂</i> ภาพรวม</a><a class="selected" data-sales-nav="create"><i>＋</i> เพิ่มโครงการ</a><a data-sales-nav="projects"><i>▤</i> โครงการของฉัน <mark>12</mark></a><a data-sales-nav="profile"><i>◉</i> โปรไฟล์</a>
+          </nav>
+          <div class="side-help"><b>ต้องการความช่วยเหลือ?</b><small>ดูคู่มือการเพิ่มโครงการ</small><button>เปิดคู่มือ ↗</button></div>
+          <div class="side-user" data-sales-nav="profile"><span>BK</span><div><b>บุญมา คงมั่น</b><small>Sales · Team A</small></div><i>•••</i></div>
+        </aside>
+        <div class="app-page form-page">
+          <header class="app-topbar"><button class="mobile-menu">☰</button><div class="breadcrumbs">Sales <b data-sales-title>/ เพิ่มโครงการใหม่</b></div><div class="top-actions"><button class="ghost sales-draft-action">บันทึกร่าง</button><button class="avatar" data-sales-nav="profile">BK</button></div></header>
+
+          <div class="page-pad sales-screen sales-dashboard-screen" data-sales-screen="dashboard">
+            <div class="sales-welcome"><div><span class="eyebrow">MY PERFORMANCE</span><h2>สวัสดี บุญมา 👋</h2><p>ติดตาม Forecast และโครงการที่ต้องดำเนินการวันนี้</p></div><button class="primary" data-sales-nav="create">＋ เพิ่มโครงการ</button></div>
+            <div class="sales-filterbar"><div class="filter-chip active">ปีงบประมาณ 2569 ⌄</div><div class="filter-chip">ทุกไตรมาส ⌄</div><span>อัปเดตล่าสุด วันนี้ 10:42</span></div>
+            <div class="sales-kpis"><article><span class="sales-kpi-icon violet">↗</span><small>Forecast ของฉัน</small><strong>฿24.8M</strong><em class="positive">↑ 12.4%</em></article><article><span class="sales-kpi-icon mint">✓</span><small>ยอด Win</small><strong>฿8.2M</strong><em class="positive">↑ 8.1%</em></article><article><span class="sales-kpi-icon amber">◎</span><small>Win rate</small><strong>33.1%</strong><em>เป้าหมาย 35%</em></article><article><span class="sales-kpi-icon sky">▤</span><small>โครงการทั้งหมด</small><strong>12</strong><em class="attention">3 ต้องติดตาม</em></article></div>
+            <div class="sales-dashboard-grid">
+              <section class="sales-chart-card"><header><div><h3>Target / Forecast / Win</h3><p>ผลงานของคุณในปีงบประมาณ 2569</p></div><div class="sales-legend"><span>Target</span><span>Forecast</span><span>Win</span></div></header><div class="sales-line-chart"><div class="chart-labels"><span>30M</span><span>20M</span><span>10M</span><span>0</span></div><svg viewBox="0 0 650 210" preserveAspectRatio="none"><path class="sales-area" d="M0 180 C60 160 105 170 150 125 S245 150 300 95 S400 115 455 70 S560 80 650 35 L650 210 L0 210Z"/><path class="sales-target" d="M0 65 L650 45"/><path class="sales-forecast" d="M0 180 C60 160 105 170 150 125 S245 150 300 95 S400 115 455 70 S560 80 650 35"/><path class="sales-win" d="M0 198 C70 190 110 195 160 175 S270 180 315 145 S420 160 470 125 S570 135 650 105"/></svg><div class="chart-months"><span>ม.ค.</span><span>ก.พ.</span><span>มี.ค.</span><span>เม.ย.</span><span>พ.ค.</span><span>มิ.ย.</span><span>ก.ค.</span></div></div></section>
+              <section class="sales-task-card"><header><div><h3>สิ่งที่ต้องทำ</h3><p>3 รายการภายในสัปดาห์นี้</p></div><button>ดูทั้งหมด</button></header><div class="sales-task urgent"><i>!</i><div><b>Digital Transformation</b><small>Bidding · 18 ส.ค. 69</small></div><em>อีก 2 วัน</em></div><div class="sales-task"><i>◷</i><div><b>Data Center Phase 2</b><small>อัปเดต Forecast</small></div><em>วันนี้</em></div><div class="sales-task"><i>✓</i><div><b>Cloud Analytics</b><small>เพิ่มวันที่เซ็นสัญญา</small></div><em>อีก 5 วัน</em></div></section>
+              <section class="recent-projects"><header><div><h3>โครงการล่าสุด</h3><p>ข้อมูลที่คุณอัปเดตล่าสุด</p></div><button data-sales-nav="projects">ดูโครงการทั้งหมด →</button></header><div class="recent-row"><span class="project-icon lavender">DT</span><div><b>Digital Transformation</b><small>กรมสรรพากร</small></div><em class="status bidding">Bidding</em><strong>฿12.5M</strong><button data-sales-nav="edit">แก้ไข</button></div><div class="recent-row"><span class="project-icon aqua">DC</span><div><b>Data Center Phase 2</b><small>การไฟฟ้านครหลวง</small></div><em class="status tor">TOR</em><strong>฿8.5M</strong><button data-sales-nav="edit">แก้ไข</button></div></section>
+            </div>
+          </div>
+
+          <div class="page-pad sales-screen active" data-sales-screen="create">
+            <div class="page-heading"><div><span class="back">← กลับรายการโครงการ</span><h2>เพิ่มโครงการใหม่</h2><p>กรอกข้อมูลหลักให้ครบ ใช้เวลาประมาณ 3–5 นาที</p></div><span class="draft-pill">● ฉบับร่าง</span></div>
+            <div class="stepper"><div class="done"><i>✓</i><span><b>ข้อมูลโครงการ</b><small>ชื่อ ลูกค้า และมูลค่า</small></span></div><em></em><div class="current"><i>2</i><span><b>แผนการขาย</b><small>สถานะและวันสำคัญ</small></span></div><em></em><div><i>3</i><span><b>ข้อมูลติดต่อ</b><small>รายละเอียดเพิ่มเติม</small></span></div></div>
+            <div class="form-layout">
+              <section class="form-card">
+                <div class="form-card-title"><span class="title-icon">◎</span><div><h3>ข้อมูลโครงการ</h3><p>ข้อมูลที่มีเครื่องหมาย <b>*</b> จำเป็นต้องกรอก</p></div></div>
+                <div class="field full"><label>ชื่อโครงการ <b>*</b></label><input value="โครงการพัฒนาระบบ Data Center" aria-label="ชื่อโครงการ"></div>
+                <div class="field-grid">
+                  <div class="field"><label>หน่วยงาน / บริษัท <b>*</b></label><div class="select-value">กรมพัฒนาธุรกิจการค้า <span>⌄</span></div><button class="inline-link">＋ ขอเพิ่มบริษัทใหม่</button></div>
+                  <div class="field"><label>มูลค่าโครงการ <b>*</b></label><div class="money-input"><input value="8,500,000"><span>บาท</span></div><small class="hint">แปดล้านห้าแสนบาทถ้วน</small></div>
+                  <div class="field"><label>กลุ่มสินค้า <b>*</b></label><div class="select-value">Infrastructure <span>⌄</span></div></div>
+                  <div class="field"><label>ปีงบประมาณ <b>*</b></label><div class="select-value">2569 <span>⌄</span></div></div>
+                </div>
+                <div class="form-actions"><button class="ghost">ยกเลิก</button><span>บันทึกร่างอัตโนมัติ 10:42</span><button class="primary">ถัดไป: แผนการขาย →</button></div>
+              </section>
+              <aside class="form-summary">
+                <div class="summary-head"><span>PF</span><div><small>ตัวอย่างโครงการ</small><b>Data Center</b></div></div>
+                <div class="summary-value"><small>มูลค่าโครงการ</small><strong>฿8.5M</strong></div>
+                <dl><div><dt>ลูกค้า</dt><dd>กรมพัฒนาธุรกิจการค้า</dd></div><div><dt>กลุ่มสินค้า</dt><dd>Infrastructure</dd></div><div><dt>ปีงบประมาณ</dt><dd>2569</dd></div></dl>
+                <div class="completion"><div><span>ความครบถ้วน</span><b>65%</b></div><i><em></em></i><small>เหลืออีก 4 รายการ</small></div>
+                <div class="tip"><span>✦</span><p><b>คำแนะนำ</b> ระบุวัน Bidding และวันคาดว่าจะเซ็นสัญญา เพื่อให้ Forecast แม่นยำขึ้น</p></div>
+              </aside>
+            </div>
+          </div>
+
+          <div class="page-pad sales-screen sales-projects-screen" data-sales-screen="projects">
+            <div class="sales-page-title"><div><span class="eyebrow">MY PIPELINE</span><h2>โครงการของฉัน <mark>12</mark></h2><p>ค้นหา ติดตาม และแก้ไขข้อมูลโครงการทั้งหมด</p></div><button class="primary" data-sales-nav="create">＋ เพิ่มโครงการ</button></div>
+            <div class="projects-toolbar"><div class="project-search">⌕ <span>ค้นหาชื่อโครงการหรือลูกค้า...</span></div><button>สถานะทั้งหมด ⌄</button><button>ปี 2569 ⌄</button><button>⇄ ตัวกรอง <mark>2</mark></button></div>
+            <div class="project-summary-strip"><div><span>ทั้งหมด</span><b>12</b></div><div><span>กำลังดำเนินการ</span><b>8</b></div><div><span>Win</span><b>3</b></div><div><span>Lost</span><b>1</b></div><em>มูลค่ารวม <strong>฿24.8M</strong></em></div>
+            <section class="sales-project-table"><table><thead><tr><th>โครงการ</th><th>ลูกค้า</th><th>สถานะ</th><th>มูลค่า</th><th>ความคืบหน้า</th><th>วันสำคัญ</th><th></th></tr></thead><tbody><tr><td><div class="project-name"><span class="project-icon lavender">DT</span><div><b>Digital Transformation</b><small>PF-2569-0086</small></div></div></td><td>กรมสรรพากร</td><td><em class="status bidding">Bidding</em></td><td><b>฿12.5M</b></td><td><div class="progress-cell"><i><em style="width:72%"></em></i><span>72%</span></div></td><td><div class="due red">18 ส.ค. 69<small>อีก 2 วัน</small></div></td><td><button data-sales-nav="edit">แก้ไข</button></td></tr><tr><td><div class="project-name"><span class="project-icon aqua">DC</span><div><b>Data Center Phase 2</b><small>PF-2569-0082</small></div></div></td><td>การไฟฟ้านครหลวง</td><td><em class="status tor">TOR</em></td><td><b>฿8.5M</b></td><td><div class="progress-cell"><i><em style="width:54%"></em></i><span>54%</span></div></td><td><div class="due">24 ส.ค. 69<small>อีก 8 วัน</small></div></td><td><button data-sales-nav="edit">แก้ไข</button></td></tr><tr><td><div class="project-name"><span class="project-icon greenish">CA</span><div><b>Cloud Analytics</b><small>PF-2569-0074</small></div></div></td><td>สำนักงานสถิติฯ</td><td><em class="status win">Win</em></td><td><b>฿3.8M</b></td><td><div class="progress-cell"><i><em style="width:100%"></em></i><span>100%</span></div></td><td><div class="due won">Win 8 ส.ค. 69<small>สำเร็จแล้ว</small></div></td><td><button data-sales-nav="edit">ดูข้อมูล</button></td></tr></tbody></table></section>
+          </div>
+
+          <div class="page-pad sales-screen sales-edit-screen" data-sales-screen="edit">
+            <div class="sales-page-title"><div><button class="text-back" data-sales-nav="projects">← กลับรายการโครงการ</button><h2>แก้ไขโครงการ</h2><p>PF-2569-0086 · อัปเดตล่าสุด วันนี้ 10:42</p></div><div class="edit-title-actions"><button class="ghost">⋮ เพิ่มเติม</button><button class="primary">บันทึกการแก้ไข</button></div></div>
+            <div class="edit-layout"><aside class="edit-section-nav"><a class="active">ข้อมูลโครงการ <span>✓</span></a><a>แผนการขาย <span>✓</span></a><a>สถานะและ Timeline <span>!</span></a><a>ข้อมูลผู้ติดต่อ</a><div class="edit-completeness"><span>ความครบถ้วน <b>82%</b></span><i><em></em></i><small>เหลืออีก 2 รายการ</small></div></aside><section class="edit-form-card"><div class="edit-project-head"><span class="project-icon lavender">DT</span><div><h3>Digital Transformation</h3><p>กรมสรรพากร · Infrastructure</p></div><em class="status bidding">Bidding</em></div><div class="field-grid"><div class="field full-span"><label>ชื่อโครงการ <b>*</b></label><input value="Digital Transformation"></div><div class="field"><label>หน่วยงาน / บริษัท <b>*</b></label><div class="select-value">กรมสรรพากร <span>⌄</span></div></div><div class="field"><label>มูลค่าโครงการ <b>*</b></label><div class="money-input"><input value="12,500,000"><span>บาท</span></div></div><div class="field"><label>กลุ่มสินค้า</label><div class="select-value">Infrastructure <span>⌄</span></div></div><div class="field"><label>โอกาสชนะ</label><div class="select-value">High · 80% <span>⌄</span></div></div></div><div class="timeline-editor"><h4>สถานะและวันสำคัญ</h4><div class="timeline-steps"><div class="complete"><i>✓</i><b>Present</b><small>12 มิ.ย. 69</small></div><em></em><div class="complete"><i>✓</i><b>TOR</b><small>20 ก.ค. 69</small></div><em></em><div class="current"><i>3</i><b>Bidding</b><small>18 ส.ค. 69</small></div><em></em><div><i>4</i><b>Win</b><small>ยังไม่ระบุ</small></div></div></div><div class="save-bar"><span>● การเปลี่ยนแปลงยังไม่ถูกบันทึก</span><button class="ghost">ยกเลิก</button><button class="primary">บันทึกการแก้ไข</button></div></section></div>
+          </div>
+
+          <div class="page-pad sales-screen sales-profile-screen" data-sales-screen="profile">
+            <div class="sales-page-title"><div><span class="eyebrow">MY ACCOUNT</span><h2>โปรไฟล์และความปลอดภัย</h2><p>จัดการข้อมูลส่วนตัวและการเข้าสู่ระบบ</p></div></div>
+            <div class="profile-layout"><aside class="profile-card"><div class="profile-avatar">BK<button>✎</button></div><h3>บุญมา คงมั่น</h3><p>Sales Executive · Team A</p><span>bkongman@prime.co.th</span><div class="profile-meta"><div><small>โครงการ</small><b>12</b></div><div><small>Win rate</small><b>33%</b></div></div></aside><section class="profile-settings"><article><header><div><h3>ข้อมูลส่วนตัว</h3><p>แก้ไขชื่อและข้อมูลติดต่อของคุณ</p></div><button class="ghost">แก้ไข</button></header><div class="profile-fields"><div><small>ชื่อ</small><b>บุญมา</b></div><div><small>นามสกุล</small><b>คงมั่น</b></div><div><small>ตำแหน่ง</small><b>Sales Executive</b></div><div><small>ทีม</small><b>Team A</b></div><div class="wide"><small>อีเมล</small><b>bkongman@prime.co.th</b><em>ยืนยันแล้ว ✓</em></div></div></article><article><header><div><h3>ความปลอดภัย</h3><p>ตั้งค่าการยืนยันตัวตนและรหัสผ่าน</p></div></header><div class="security-row"><span class="security-icon">⌁</span><div><b>การยืนยันตัวตน 2 ขั้นตอน</b><small>รับรหัส OTP ผ่านอีเมลเมื่อเข้าสู่ระบบ</small></div><button class="toggle on"><i></i></button></div><div class="security-row"><span class="security-icon">••</span><div><b>รหัสผ่าน</b><small>เปลี่ยนล่าสุดเมื่อ 24 พฤษภาคม 2569</small></div><button class="ghost">เปลี่ยนรหัสผ่าน</button></div></article></section></div>
+          </div>
+
+          <nav class="mobile-bottom sales-mobile-nav"><a data-sales-nav="dashboard">⌂<small>หน้าหลัก</small></a><a class="selected" data-sales-nav="create">＋<small>เพิ่มข้อมูล</small></a><a data-sales-nav="projects">▤<small>โครงการ</small></a><a data-sales-nav="profile">◉<small>โปรไฟล์</small></a></nav>
+        </div>
+      </article>
+
+      <article class="prototype insight-prototype" data-prototype="insight">
+        <aside class="side-nav pearl">
+          <div class="app-logo"><span>P</span><b>PrimeForecast</b></div>
+          <nav><small>WORKSPACE</small><a class="selected"><i>⌁</i> Executive overview</a><a><i>▤</i> Sales pipeline</a><a><i>◫</i> Team performance</a><small>REPORTS</small><a><i>↗</i> Bidding report</a><a><i>◇</i> Contract report</a><a><i>◷</i> Win date report</a></nav>
+          <div class="side-user"><span>SA</span><div><b>Somchai A.</b><small>Administrator</small></div><i>⌄</i></div>
+        </aside>
+        <div class="app-page dashboard-page">
+          <header class="app-topbar"><button class="mobile-menu">☰</button><div class="global-search">⌕ <span>ค้นหาโครงการ ลูกค้า หรือทีม...</span><kbd>⌘ K</kbd></div><div class="top-actions"><button class="icon-button">♢<mark></mark></button><button class="avatar coral">SA</button></div></header>
+          <div class="page-pad">
+            <div class="dashboard-heading"><div><span>วันจันทร์ที่ 10 สิงหาคม 2569</span><h2>ภาพรวมธุรกิจ</h2><p>ยอดขายรวมทุกทีม ประจำปีงบประมาณ 2569</p></div><div class="filter-actions"><button>ปี 2569⌄</button><button>ทุกทีม⌄</button><button class="export">⇩ Export</button></div></div>
+            <div class="kpi-grid">
+              <div class="kpi-card"><span class="kpi-icon purple">↗</span><div><small>Forecast ทั้งหมด</small><strong>฿124.8M</strong><p><b>↑ 12.4%</b> จากไตรมาสก่อน</p></div><svg viewBox="0 0 100 30"><path d="M0 25 C18 20 20 22 35 14 S58 18 68 8 S88 12 100 2"/></svg></div>
+              <div class="kpi-card"><span class="kpi-icon green">✓</span><div><small>ยอดขายที่ Win</small><strong>฿48.2M</strong><p><b>↑ 8.1%</b> จากไตรมาสก่อน</p></div><svg class="green-line" viewBox="0 0 100 30"><path d="M0 24 C15 26 25 11 38 18 S58 14 70 9 S88 5 100 3"/></svg></div>
+              <div class="kpi-card"><span class="kpi-icon orange">◎</span><div><small>Win rate</small><strong>38.6%</strong><p><b>↑ 2.3%</b> จากเป้าหมาย</p></div><div class="ring"><span>39</span></div></div>
+              <div class="kpi-card"><span class="kpi-icon blue">▣</span><div><small>โครงการใน Pipeline</small><strong>86</strong><p><em>14</em> โครงการต้องติดตาม</p></div><div class="mini-bars"><i></i><i></i><i></i><i></i><i></i></div></div>
+            </div>
+            <div class="dashboard-grid">
+              <section class="chart-card revenue-chart"><header><div><h3>Target vs Forecast vs Win</h3><p>เปรียบเทียบผลงานรายเดือน</p></div><div class="legend"><span class="target">Target</span><span class="forecast">Forecast</span><span class="win">Win</span></div></header><div class="chart-area"><div class="y-axis"><span>40M</span><span>30M</span><span>20M</span><span>10M</span><span>0</span></div><svg viewBox="0 0 700 230" preserveAspectRatio="none"><defs><linearGradient id="area" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6c63ff" stop-opacity=".22"/><stop offset="1" stop-color="#6c63ff" stop-opacity="0"/></linearGradient></defs><path class="area" d="M0 190 C70 155 110 175 170 115 S270 145 340 90 S450 125 520 65 S630 78 700 28 L700 230 L0 230Z"/><path class="line target-line" d="M0 70 L700 50"/><path class="line forecast-line" d="M0 190 C70 155 110 175 170 115 S270 145 340 90 S450 125 520 65 S630 78 700 28"/><path class="line win-line" d="M0 215 C80 205 125 195 175 180 S275 183 345 145 S470 172 525 130 S635 142 700 105"/></svg><div class="x-axis"><span>ม.ค.</span><span>ก.พ.</span><span>มี.ค.</span><span>เม.ย.</span><span>พ.ค.</span><span>มิ.ย.</span><span>ก.ค.</span></div></div></section>
+              <section class="chart-card pipeline-health"><header><div><h3>Pipeline health</h3><p>มูลค่าแยกตามสถานะ</p></div><button>•••</button></header><div class="donut-wrap"><div class="donut"><div><strong>฿124.8M</strong><small>ทั้งหมด</small></div></div><ul><li><i class="c1"></i><span>Present</span><b>฿28.4M</b><em>23%</em></li><li><i class="c2"></i><span>Budget</span><b>฿34.7M</b><em>28%</em></li><li><i class="c3"></i><span>Bidding</span><b>฿24.1M</b><em>19%</em></li><li><i class="c4"></i><span>Win</span><b>฿37.6M</b><em>30%</em></li></ul></div></section>
+              <section class="chart-card attention-list"><header><div><h3>ต้องติดตาม</h3><p>โครงการสำคัญใน 7 วัน</p></div><a>ดูทั้งหมด →</a></header><div class="attention-row"><span class="company-icon violet">DT</span><div><b>Digital Transformation</b><small>กรมสรรพากร · ฿12.5M</small></div><em class="urgent">Bidding ใน 2 วัน</em><i>›</i></div><div class="attention-row"><span class="company-icon mint">DC</span><div><b>Data Center Phase 2</b><small>MEA · ฿8.5M</small></div><em>สัญญาใน 5 วัน</em><i>›</i></div></section>
+            </div>
+          </div>
+          <nav class="mobile-bottom"><a class="selected">⌁<small>ภาพรวม</small></a><a>▤<small>Pipeline</small></a><a>◫<small>ทีม</small></a><a>↗<small>รายงาน</small></a></nav>
+        </div>
+      </article>
+
+      <article class="prototype pipeline-prototype" data-prototype="pipeline">
+        <aside class="rail-nav"><div class="rail-logo">P</div><nav><a class="selected">⌁</a><a>▤</a><a>◫</a><a>↗</a><a>⚙</a></nav><span class="rail-avatar">NA</span></aside>
+        <div class="app-page pipeline-page">
+          <header class="pipeline-topbar"><div class="wordmark">PrimeForecast <span>TEAM WORKSPACE</span></div><div class="global-search">⌕ <span>ค้นหาทุกอย่าง...</span><kbd>Ctrl K</kbd></div><button class="icon-button">♢<mark></mark></button><button class="avatar teal">NA</button></header>
+          <div class="page-pad">
+            <div class="pipeline-heading"><div><span class="eyebrow">SALES OPERATIONS</span><h2>Sales Pipeline <mark>86</mark></h2><p>ติดตามและอัปเดตทุกโครงการของทีมในที่เดียว</p></div><button class="primary mint-button">＋ เพิ่มโครงการ</button></div>
+            <div class="pipeline-stats"><div><span>Pipeline value</span><strong>฿124.8M</strong><small class="up">↗ 12.4%</small></div><div><span>Weighted forecast</span><strong>฿78.6M</strong><small>63% coverage</small></div><div><span>Win this quarter</span><strong>฿18.2M</strong><small class="up">↗ 8.1%</small></div><div><span>Need attention</span><strong>14</strong><small class="warning">Due this week</small></div></div>
+            <div class="workspace-toolbar"><div class="view-tabs"><button class="active">▤ รายการ</button><button>▦ Board</button><button>◷ Timeline</button></div><div class="table-tools"><button>⌕ ค้นหา</button><button>⇄ Filter <mark>2</mark></button><button>↕ Sort</button><button>⚙ คอลัมน์</button></div></div>
+            <section class="data-workspace">
+              <table><thead><tr><th><input type="checkbox"></th><th>โครงการ ↕</th><th>ลูกค้า</th><th>เจ้าของ</th><th>สถานะ</th><th>มูลค่า</th><th>ความคืบหน้า</th><th>วันสำคัญ</th><th></th></tr></thead><tbody>
+                <tr class="active-row"><td><input type="checkbox"></td><td><div class="project-name"><span class="project-icon lavender">DT</span><div><b>Digital Transformation</b><small>PF-2569-0086</small></div></div></td><td>กรมสรรพากร</td><td><div class="owner"><span>BK</span>บุญมา</div></td><td><em class="status bidding">Bidding</em></td><td><b>฿12.5M</b></td><td><div class="progress-cell"><i><em style="width:72%"></em></i><span>72%</span></div></td><td><div class="due red">18 ส.ค. 69<small>อีก 2 วัน</small></div></td><td>•••</td></tr>
+                <tr><td><input type="checkbox"></td><td><div class="project-name"><span class="project-icon aqua">DC</span><div><b>Data Center Phase 2</b><small>PF-2569-0082</small></div></div></td><td>การไฟฟ้านครหลวง</td><td><div class="owner"><span>NK</span>ณัฐชา</div></td><td><em class="status tor">TOR</em></td><td><b>฿8.5M</b></td><td><div class="progress-cell"><i><em style="width:54%"></em></i><span>54%</span></div></td><td><div class="due">24 ส.ค. 69<small>อีก 8 วัน</small></div></td><td>•••</td></tr>
+                <tr><td><input type="checkbox"></td><td><div class="project-name"><span class="project-icon peach">CS</span><div><b>Cyber Security Platform</b><small>PF-2569-0079</small></div></div></td><td>ธนาคารออมสิน</td><td><div class="owner"><span>PS</span>ภาสกร</div></td><td><em class="status present">Present</em></td><td><b>฿6.8M</b></td><td><div class="progress-cell"><i><em style="width:28%"></em></i><span>28%</span></div></td><td><div class="due">2 ก.ย. 69<small>อีก 17 วัน</small></div></td><td>•••</td></tr>
+                <tr><td><input type="checkbox"></td><td><div class="project-name"><span class="project-icon greenish">CA</span><div><b>Cloud Analytics</b><small>PF-2569-0074</small></div></div></td><td>สำนักงานสถิติฯ</td><td><div class="owner"><span>BK</span>บุญมา</div></td><td><em class="status win">Win</em></td><td><b>฿5.4M</b></td><td><div class="progress-cell"><i><em style="width:100%"></em></i><span>100%</span></div></td><td><div class="due won">Win 8 ส.ค. 69<small>สำเร็จแล้ว</small></div></td><td>•••</td></tr>
+              </tbody></table>
+              <aside class="quick-drawer"><header><div><span class="project-icon lavender">DT</span><div><small>PF-2569-0086</small><h3>Digital Transformation</h3></div></div><button>×</button></header><div class="drawer-value"><small>มูลค่าโครงการ</small><strong>฿12,500,000</strong><em class="status bidding">Bidding</em></div><div class="drawer-section"><h4>Quick update</h4><label>สถานะปัจจุบัน</label><div class="select-value">Bidding <span>⌄</span></div><label>วันที่ Bidding</label><div class="select-value">18 สิงหาคม 2569 <span>▣</span></div><label>ความคืบหน้า <b>72%</b></label><input type="range" min="0" max="100" value="72"></div><div class="drawer-section"><h4>ผู้รับผิดชอบ</h4><div class="assignee"><span>BK</span><div><b>บุญมา คงมั่น</b><small>Sales · Team A</small></div><i>⌄</i></div></div><footer><button class="ghost">ดูรายละเอียด</button><button class="primary mint-button">บันทึกการแก้ไข</button></footer></aside>
+            </section>
+          </div>
+          <nav class="mobile-bottom"><a class="selected">⌁<small>Pipeline</small></a><a>▦<small>Board</small></a><a class="mobile-add">＋</a><a>◷<small>ติดตาม</small></a><a>◉<small>ฉัน</small></a></nav>
+        </div>
+      </article>
+    </div>
+    <footer class="decision-note"><span>คำแนะนำจาก UX</span><p><b>ใช้ Concept 01 เป็นฐานสำหรับ Sales</b> และนำ KPI + report hierarchy จาก Concept 02 มาใช้ในหน้า Admin ส่วน table/quick edit จาก Concept 03 เหมาะเป็นหน้าจัดการข้อมูลขั้นสูง</p></footer>
+  </main>
+  <script src="./app.js"></script>
+</body>
+</html>
