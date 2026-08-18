@@ -8,9 +8,11 @@
 !/public/uploads/.htaccess
 /storage/*.key
 /vendor
+/outputs
 .env
 .env.backup
 .env.production
+.env.testing
 Homestead.json
 Homestead.yaml
 auth.json

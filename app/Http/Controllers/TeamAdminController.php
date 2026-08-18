@@ -7,10 +7,151 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Support\ProjectTimelineValidator;
+use Illuminate\Support\Facades\Validator;
 
 class TeamAdminController extends Controller
 {
     public function dashboard(Request $request)
+    {
+        $user = Auth::user();
+        $yearFilter = $this->resolveDashboardYearFilter($request);
+        $year = $yearFilter['year'];
+        $selectedYear = $yearFilter['selected'];
+        $quarter = in_array((string) $request->query('quarter'), ['1', '2', '3', '4'], true)
+            ? (int) $request->query('quarter')
+            : null;
+
+        $userTeams = DB::table('transactional_team')
+            ->where('user_id', $user->user_id)
+            ->pluck('team_id')
+            ->map(fn ($teamId) => (int) $teamId)
+            ->all();
+
+        $availableYears = DB::table('transactional')
+            ->whereNull('deleted_at')
+            ->whereIn('team_id', $userTeams ?: [-1])
+            ->whereNotNull('fiscalyear')
+            ->distinct()
+            ->orderByDesc('fiscalyear')
+            ->pluck('fiscalyear');
+
+        $base = $this->accurateTeamDashboardBaseQuery($userTeams, $year, $quarter);
+        $effectiveDate = $this->dashboardEffectiveDateSql();
+
+        $estimateValue = (clone $base)->sum('t.product_value');
+        $winValue = (clone $base)->where('current_step.orderlv', 5)->sum('t.product_value');
+        $winCount = (clone $base)->where('current_step.orderlv', 5)->count('t.transac_id');
+        $lostCount = (clone $base)->where('current_step.orderlv', 6)->count('t.transac_id');
+
+        $monthlyWins = (clone $base)
+            ->where('current_step.orderlv', 5)
+            ->selectRaw("DATE_FORMAT({$effectiveDate}, '%Y-%m') as sale_month, SUM(t.product_value) as monthly_value")
+            ->groupByRaw("DATE_FORMAT({$effectiveDate}, '%Y-%m')")
+            ->orderBy('sale_month')
+            ->get();
+
+        $runningWin = 0.0;
+        $cumulativeWin = $monthlyWins->map(function ($row) use (&$runningWin) {
+            $runningWin += (float) $row->monthly_value;
+            return (object) [
+                'sale_month' => $row->sale_month,
+                'cumulative_win_value' => $runningWin,
+            ];
+        });
+
+        $sumByTeam = (clone $base)
+            ->join('team_catalog as tc', 't.team_id', '=', 'tc.team_id')
+            ->where('current_step.orderlv', 5)
+            ->selectRaw('tc.team_id, tc.team, SUM(t.product_value) as total_value')
+            ->groupBy('tc.team_id', 'tc.team')
+            ->orderByDesc('total_value')
+            ->get();
+
+        $sumByPerson = (clone $base)
+            ->join('user as u', 't.user_id', '=', 'u.user_id')
+            ->where('current_step.orderlv', 5)
+            ->whereNull('u.deleted_at')
+            ->selectRaw('u.user_id, u.nname, u.surename, SUM(t.product_value) as total_value')
+            ->groupBy('u.user_id', 'u.nname', 'u.surename')
+            ->orderByDesc('total_value')
+            ->limit(10)
+            ->get();
+
+        $saleStatus = (clone $base)
+            ->selectRaw("DATE_FORMAT({$effectiveDate}, '%Y-%m') as sale_month, COALESCE(current_step.orderlv, 0) as orderlv, COALESCE(current_step.level, 'ยังไม่ระบุสถานะ') as level, COUNT(*) as count")
+            ->groupByRaw("DATE_FORMAT({$effectiveDate}, '%Y-%m'), COALESCE(current_step.orderlv, 0), COALESCE(current_step.level, 'ยังไม่ระบุสถานะ')")
+            ->orderBy('sale_month')
+            ->orderBy('orderlv')
+            ->get();
+
+        $saleStatusValue = (clone $base)
+            ->selectRaw("DATE_FORMAT({$effectiveDate}, '%Y-%m') as sale_month, COALESCE(current_step.orderlv, 0) as orderlv, COALESCE(current_step.level, 'ยังไม่ระบุสถานะ') as level, SUM(t.product_value) as total_value")
+            ->groupByRaw("DATE_FORMAT({$effectiveDate}, '%Y-%m'), COALESCE(current_step.orderlv, 0), COALESCE(current_step.level, 'ยังไม่ระบุสถานะ')")
+            ->orderBy('sale_month')
+            ->orderBy('orderlv')
+            ->get();
+
+        $topProducts = (clone $base)
+            ->join('product_group as pg', 't.Product_id', '=', 'pg.product_id')
+            ->where('current_step.orderlv', 5)
+            ->selectRaw('pg.product_id, pg.product, SUM(t.product_value) as total_value')
+            ->groupBy('pg.product_id', 'pg.product')
+            ->orderByDesc('total_value')
+            ->limit(10)
+            ->get();
+
+        $topCustomers = (clone $base)
+            ->join('company_catalog as cc', 't.company_id', '=', 'cc.company_id')
+            ->where('current_step.orderlv', 5)
+            ->selectRaw('cc.company_id, cc.company, SUM(t.product_value) as total_value')
+            ->groupBy('cc.company_id', 'cc.company')
+            ->orderByDesc('total_value')
+            ->limit(10)
+            ->get();
+
+        $forecastByUser = (clone $base)
+            ->selectRaw('t.user_id, SUM(t.product_value) as forecast_value')
+            ->groupBy('t.user_id');
+        $winByUser = (clone $base)
+            ->where('current_step.orderlv', 5)
+            ->selectRaw('t.user_id, SUM(t.product_value) as win_value')
+            ->groupBy('t.user_id');
+        $targetByUser = DB::table('user_forecast_target as uft')
+            ->when($year !== null, fn ($query) => $query->where('uft.fiscal_year', $year))
+            ->selectRaw('uft.user_id, SUM(uft.target_value) as target_value')
+            ->groupBy('uft.user_id');
+
+        $targetForecastWin = DB::table('user as u')
+            ->leftJoinSub($targetByUser, 'tgt', 'tgt.user_id', '=', 'u.user_id')
+            ->leftJoinSub($forecastByUser, 'fc', 'fc.user_id', '=', 'u.user_id')
+            ->leftJoinSub($winByUser, 'wn', 'wn.user_id', '=', 'u.user_id')
+            ->where('u.role_id', 3)
+            ->whereNull('u.deleted_at')
+            ->whereExists(function ($query) use ($userTeams) {
+                $query->selectRaw('1')
+                    ->from('transactional_team as tt')
+                    ->whereColumn('tt.user_id', 'u.user_id')
+                    ->whereIn('tt.team_id', $userTeams ?: [-1]);
+            })
+            ->where(function ($query) {
+                $query->whereNotNull('tgt.target_value')
+                    ->orWhereNotNull('fc.forecast_value')
+                    ->orWhereNotNull('wn.win_value');
+            })
+            ->selectRaw('u.user_id, u.nname, u.surename, COALESCE(tgt.target_value, 0) as target_value, COALESCE(fc.forecast_value, 0) as forecast_value, COALESCE(wn.win_value, 0) as win_value')
+            ->orderByDesc('forecast_value')
+            ->get();
+
+        return view('teamadmin.dashboard', compact(
+            'estimateValue', 'winValue', 'winCount', 'lostCount', 'cumulativeWin',
+            'sumByTeam', 'sumByPerson', 'saleStatus', 'saleStatusValue', 'topProducts',
+            'topCustomers', 'targetForecastWin', 'availableYears', 'year', 'selectedYear', 'quarter'
+        ));
+    }
+
+    /** @deprecated Kept temporarily until the shared dashboard rollout is accepted. */
+    private function legacyDashboard(Request $request)
     {
         $user = Auth::user();
         
@@ -412,6 +553,66 @@ class TeamAdminController extends Controller
 
     public function chartDetail(Request $request)
     {
+        $type = (string) $request->query('type');
+        $value = $request->query('value');
+        $value2 = $request->query('value2');
+        $year = $this->resolveDashboardYearFilter($request)['year'];
+        $quarter = in_array((string) $request->query('quarter'), ['1', '2', '3', '4'], true)
+            ? (int) $request->query('quarter')
+            : null;
+        $userTeams = DB::table('transactional_team')
+            ->where('user_id', Auth::id())
+            ->pluck('team_id')
+            ->map(fn ($teamId) => (int) $teamId)
+            ->all();
+
+        $query = $this->accurateTeamDashboardBaseQuery($userTeams, $year, $quarter)
+            ->leftJoin('company_catalog as detail_company', 't.company_id', '=', 'detail_company.company_id')
+            ->leftJoin('product_group as detail_product', 't.Product_id', '=', 'detail_product.product_id')
+            ->leftJoin('user as detail_user', 't.user_id', '=', 'detail_user.user_id')
+            ->leftJoin('team_catalog as detail_team', 't.team_id', '=', 'detail_team.team_id');
+        $effectiveDate = $this->dashboardEffectiveDateSql();
+
+        switch ($type) {
+            case 'month':
+                $query->where('current_step.orderlv', 5)
+                    ->whereRaw("DATE_FORMAT({$effectiveDate}, '%Y-%m') <= ?", [$value]);
+                break;
+            case 'team':
+                $query->where('current_step.orderlv', 5)->where('t.team_id', $value);
+                break;
+            case 'step':
+                $query->whereRaw('COALESCE(current_step.orderlv, 0) = ?', [(int) $value]);
+                if ($value2) {
+                    $query->whereRaw("DATE_FORMAT({$effectiveDate}, '%Y-%m') = ?", [$value2]);
+                }
+                break;
+            case 'user_forecast':
+                $query->where('t.user_id', $value);
+                break;
+            case 'user':
+            case 'user_win':
+                $query->where('current_step.orderlv', 5)->where('t.user_id', $value);
+                break;
+            case 'product':
+                $query->where('current_step.orderlv', 5)->where('t.Product_id', $value);
+                break;
+            case 'company':
+                $query->where('current_step.orderlv', 5)->where('t.company_id', $value);
+                break;
+            default:
+                return response()->json([]);
+        }
+
+        return response()->json($query
+            ->selectRaw("t.transac_id, t.Product_detail, t.product_value, detail_company.company, detail_product.product as product_group, detail_user.nname, detail_user.surename, detail_team.team, COALESCE(current_step.level, 'ยังไม่ระบุสถานะ') as step_name, t.contact_start_date")
+            ->orderByDesc('t.product_value')
+            ->get());
+    }
+
+    /** @deprecated Kept temporarily until the shared dashboard rollout is accepted. */
+    private function legacyChartDetail(Request $request)
+    {
         $user = Auth::user();
         $type = $request->get('type');
         $value = $request->get('value');
@@ -786,6 +987,41 @@ class TeamAdminController extends Controller
         ]);
     }
 
+    private function accurateTeamDashboardBaseQuery(array $teamIds, ?int $year, ?int $quarter)
+    {
+        $latestIds = DB::table('transactional_step')
+            ->selectRaw('transac_id, MAX(transacstep_id) as max_step_id')
+            ->groupBy('transac_id');
+
+        $latestSteps = DB::table('transactional_step as latest_history')
+            ->joinSub($latestIds, 'latest_ids', function ($join) {
+                $join->on('latest_ids.transac_id', '=', 'latest_history.transac_id')
+                    ->on('latest_ids.max_step_id', '=', 'latest_history.transacstep_id');
+            })
+            ->select('latest_history.transac_id', 'latest_history.level_id', 'latest_history.date');
+
+        $query = DB::table('transactional as t')
+            ->leftJoinSub($latestSteps, 'latest_step', 'latest_step.transac_id', '=', 't.transac_id')
+            ->leftJoin('step as current_step', 'current_step.level_id', '=', 'latest_step.level_id')
+            ->whereNull('t.deleted_at')
+            ->whereIn('t.team_id', $teamIds ?: [-1]);
+
+        if ($year !== null) {
+            $query->where('t.fiscalyear', $year);
+        }
+
+        if ($quarter !== null) {
+            $query->whereRaw('QUARTER(' . $this->dashboardEffectiveDateSql() . ') = ?', [$quarter]);
+        }
+
+        return $query;
+    }
+
+    private function dashboardEffectiveDateSql(): string
+    {
+        return 'COALESCE(latest_step.date, t.contact_start_date)';
+    }
+
     private function resolveDashboardYearFilter(Request $request): array
     {
         $currentYear = (int) date('Y');
@@ -892,19 +1128,28 @@ class TeamAdminController extends Controller
         $roles = \App\Models\RoleCatalog::orderBy('role')->get();
         $positions = \App\Models\Position::orderBy('position')->get();
         $twoFactorEnabled = $user->two_factor_enabled;
-        
-        return view('teamadmin.profile', compact('user', 'roles', 'positions', 'twoFactorEnabled'));
+        $teamIds = DB::table('transactional_team')->where('user_id', $user->user_id)->pluck('team_id');
+        $profileStats = DB::table('transactional as t')
+            ->leftJoin('step as s', 't.Step_id', '=', 's.level_id')
+            ->whereNull('t.deleted_at')
+            ->whereIn('t.team_id', $teamIds)
+            ->selectRaw('COUNT(t.transac_id) as project_count, SUM(CASE WHEN s.orderlv = 5 THEN 1 ELSE 0 END) as win_count')
+            ->first();
+
+        return view('teamadmin.profile', compact('user', 'roles', 'positions', 'twoFactorEnabled', 'profileStats'));
     }
 
     public function updateProfile(\Illuminate\Http\Request $request)
     {
         $user = auth()->user();
         
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'nname' => 'required|string|max:255',
             'surname' => 'required|string|max:255',
             'avatar' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
+        ProjectTimelineValidator::attach($validator, $request->all());
+        $validator->validate();
 
         try {
             $user->nname = $request->nname;
@@ -1089,13 +1334,7 @@ class TeamAdminController extends Controller
         try {
             $productValue = str_replace(',', '', $request->product_value);
 
-            $stepId = null;
-            if ($request->has('step') && is_array($request->step)) {
-                $selectedSteps = array_keys(array_filter($request->step));
-                if (!empty($selectedSteps)) {
-                    $stepId = max($selectedSteps);
-                }
-            }
+            $stepId = ProjectTimelineValidator::latestSelectedStepId($request->all());
 
             $transaction->update([
                 'user_id' => $request->user_id,

@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>Login | Prime Forecast V2</title>
+    <title>Login | Prime Forecast V3</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
@@ -153,7 +153,7 @@
         <div class="form-section">
             <div class="logo-title mb-2">
                 <img src="{{ asset('images/logo.png') }}" alt="Logo">
-                <span><span style="color: #d32f2f;">Prime</span> Forecast V2</span>
+                <span><span style="color: #d32f2f;">Prime</span> Forecast V3</span>
             </div>
             <h3>เข้าสู่ระบบ</h3>
 

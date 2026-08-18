@@ -3,7 +3,17 @@
 @section('title', 'Admin Dashboard | PrimeForecast')
 
 @section('content_header')
-    <h1>Dashboard</h1>
+    <div class="pf-exec-head">
+        <div>
+            <div class="pf-exec-eyebrow">Business overview</div>
+            <h1>ภาพรวมธุรกิจ</h1>
+            <p>ติดตาม Forecast, ผลลัพธ์การขาย และประสิทธิภาพของทุกทีมในมุมมองเดียว</p>
+        </div>
+        <div class="pf-exec-actions">
+            <a href="{{ route('admin.dashboard.table') }}" class="btn btn-outline-primary"><i class="fas fa-stream"></i> Sales Pipeline</a>
+            <a href="{{ route('admin.reports.index') }}" class="btn btn-primary"><i class="fas fa-chart-line"></i> รายงาน</a>
+        </div>
+    </div>
 @stop
 
 @section('content')
@@ -106,7 +116,7 @@
         <div class="col-md-6">
             <div class="card card-success">
                 <div class="card-header">
-                    <h3 class="card-title">ยอดขายรวม(มูลค่า)</h3>
+                    <h3 class="card-title">ยอด WIN สะสม</h3>
                     <div class="card-tools">
                         <button type="button" class="btn btn-tool" data-card-widget="maximize"><i class="fas fa-expand"></i></button>
                     </div>
@@ -393,7 +403,7 @@
                     },
                     {
                         type: 'line',
-                        label: 'Target รวม (ทุก User)',
+                        label: 'Target รวมรายปี (ทุก User)',
                         data: targetLineValues,
                         borderColor: 'rgba(153, 102, 255, 1)',
                         backgroundColor: 'rgba(153, 102, 255, 0.15)',
@@ -703,6 +713,7 @@
         if (!ctx) return;
 
         const stepConfig = {
+            0: { label: 'ยังไม่ระบุสถานะ', color: 'rgba(108, 117, 125, 0.75)', border: 'rgba(108, 117, 125, 1)' },
             1: { label: 'นำเสนอ Solution', color: 'rgba(54, 162, 235, 0.8)', border: 'rgba(54, 162, 235, 1)' },
             2: { label: 'ตั้งงบประมาณ', color: 'rgba(255, 206, 86, 0.8)', border: 'rgba(255, 206, 86, 1)' },
             3: { label: 'ร่าง TOR', color: 'rgba(255, 159, 64, 0.8)', border: 'rgba(255, 159, 64, 1)' },
@@ -780,6 +791,7 @@
         if (!ctx) return;
 
         const stepConfig = {
+            0: { label: 'ยังไม่ระบุสถานะ', color: 'rgba(108, 117, 125, 0.75)', border: 'rgba(108, 117, 125, 1)' },
             1: { label: 'นำเสนอ Solution', color: 'rgba(54, 162, 235, 0.8)', border: 'rgba(54, 162, 235, 1)' },
             2: { label: 'ตั้งงบประมาณ', color: 'rgba(255, 206, 86, 0.8)', border: 'rgba(255, 206, 86, 1)' },
             3: { label: 'ร่าง TOR', color: 'rgba(255, 159, 64, 0.8)', border: 'rgba(255, 159, 64, 1)' },
@@ -944,7 +956,7 @@
                 labels: labels,
                 datasets: [
                     {
-                        label: 'Target',
+                        label: 'Target รายปี',
                         data: data.map(r => Number(r.target_value)),
                         backgroundColor: 'rgba(153, 102, 255, 0.6)',
                         borderColor: 'rgba(153, 102, 255, 1)',
@@ -1030,6 +1042,7 @@
 @stop
 
 @section('css')
+<link rel="stylesheet" href="{{ asset('css/executive-v3.css') }}">
 <style>
     .content-wrapper {
         background-color: #b3d6e4;

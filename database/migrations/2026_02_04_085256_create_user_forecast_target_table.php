@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('user_forecast_target', function (Blueprint $table) {
             $table->id();
-            $table->integer('user_id');
+            $table->unsignedInteger('user_id');
             $table->string('fiscal_year', 10);
             $table->decimal('target_value', 15, 2)->default(0);
             $table->timestamps();

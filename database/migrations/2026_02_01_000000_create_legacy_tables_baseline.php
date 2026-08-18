@@ -50,7 +50,7 @@ return new class extends Migration
             Schema::create('company_catalog', function (Blueprint $table) {
                 $table->increments('company_id');
                 $table->string('company', 255);
-                $table->integer('Industry_id');
+                $table->unsignedInteger('Industry_id');
 
                 $table->foreign('Industry_id')->references('Industry_id')->on('industry_group');
             });
@@ -95,16 +95,13 @@ return new class extends Migration
                 $table->increments('user_id');
                 $table->string('email', 50);
                 $table->string('password', 50);
-                $table->integer('role_id');
+                $table->unsignedInteger('role_id');
                 $table->string('nname', 200);
                 $table->string('surename', 200);
                 $table->string('avatar_path', 255);
                 $table->integer('position_id')->nullable();
                 $table->integer('forecast');
                 $table->boolean('is_active')->default(false);
-                $table->boolean('two_factor_enabled')->default(false);
-                $table->string('two_factor_code', 255)->nullable();
-                $table->datetime('two_factor_expires_at')->nullable();
                 $table->string('reset_token', 64);
                 $table->datetime('token_expiry')->nullable();
 
@@ -116,11 +113,9 @@ return new class extends Migration
         if (!Schema::hasTable('transactional')) {
             Schema::create('transactional', function (Blueprint $table) {
                 $table->increments('transac_id');
-                $table->timestamp('created_at')->nullable();
-                $table->timestamp('updated_at')->nullable();
-                $table->integer('user_id');
-                $table->integer('company_id');
-                $table->integer('Product_id');
+                $table->unsignedInteger('user_id');
+                $table->unsignedInteger('company_id');
+                $table->unsignedInteger('Product_id');
                 $table->string('Product_detail', 100);
                 $table->integer('Step_id');
                 $table->integer('Source_budget_id');
@@ -137,11 +132,11 @@ return new class extends Migration
                 $table->date('win_date')->nullable();
                 $table->integer('lost');
                 $table->date('lost_date')->nullable();
-                $table->integer('team_id');
+                $table->unsignedInteger('team_id');
                 $table->date('contact_start_date')->nullable();
                 $table->date('date_of_closing_of_sale')->nullable();
                 $table->date('sales_can_be_close')->nullable();
-                $table->integer('priority_id');
+                $table->unsignedInteger('priority_id');
                 $table->double('product_value');
                 $table->string('remark', 255);
                 $table->timestamp('timestamp')->useCurrent()->useCurrentOnUpdate();
@@ -158,8 +153,8 @@ return new class extends Migration
         if (!Schema::hasTable('transactional_step')) {
             Schema::create('transactional_step', function (Blueprint $table) {
                 $table->increments('transacstep_id');
-                $table->integer('transac_id');
-                $table->integer('level_id');
+                $table->unsignedInteger('transac_id');
+                $table->unsignedInteger('level_id');
                 $table->date('date')->nullable();
                 $table->timestamp('checkdate')->useCurrent()->useCurrentOnUpdate();
 
@@ -172,8 +167,8 @@ return new class extends Migration
         if (!Schema::hasTable('transactional_team')) {
             Schema::create('transactional_team', function (Blueprint $table) {
                 $table->increments('transacteam_id');
-                $table->integer('user_id');
-                $table->integer('team_id');
+                $table->unsignedInteger('user_id');
+                $table->unsignedInteger('team_id');
 
                 $table->foreign('team_id')->references('team_id')->on('team_catalog');
             });

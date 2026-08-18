@@ -18,6 +18,8 @@ use App\Models\RoleCatalog;
 use App\Models\Position;
 use App\Models\CompanyRequest;
 use App\Models\User;
+use App\Support\ProjectTimelineValidator;
+use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
 {
@@ -27,10 +29,13 @@ class UserController extends Controller
         $resolvedYear = $this->resolveDashboardYearFilter($request);
         $year = $resolvedYear['year'];
         $selectedYear = $resolvedYear['selected'];
-        $quarter = $request->get('quarter');
+        $quarter = in_array((string) $request->query('quarter'), ['1', '2', '3', '4'], true)
+            ? (int) $request->query('quarter')
+            : null;
         
         // Get available years from transactional data
         $availableYears = DB::table('transactional')
+            ->whereNull('deleted_at')
             ->where('user_id', $userId)
             ->select('fiscalyear')
             ->distinct()
@@ -47,6 +52,43 @@ class UserController extends Controller
         $saleStepData = $this->getSaleStepData($userId, $year, $quarter);
         $winForecastData = $this->getWinForecastData($userId, $year, $quarter);
         $sumValuePercentData = $this->getSumValuePercentData($userId, $year, $quarter);
+
+        $projectQuery = $this->accurateUserDashboardBaseQuery($userId, $year, $quarter);
+
+        $projectCount = (clone $projectQuery)->count('t.transac_id');
+        $recentProjects = (clone $projectQuery)
+            ->leftJoin('company_catalog as c', 't.company_id', '=', 'c.company_id')
+            ->select([
+                't.transac_id',
+                't.Product_detail',
+                't.product_value',
+                't.updated_at',
+                'c.company',
+                'current_step.level as step_level',
+            ])
+            ->orderByDesc('t.updated_at')
+            ->limit(5)
+            ->get();
+
+        $attentionProjects = (clone $projectQuery)
+            ->leftJoin('company_catalog as c', 't.company_id', '=', 'c.company_id')
+            ->where(function ($query) {
+                $query->whereNotNull('t.date_of_closing_of_sale')
+                    ->orWhereNotNull('t.sales_can_be_close');
+            })
+            ->whereRaw('COALESCE(t.date_of_closing_of_sale, t.sales_can_be_close) >= DATE_SUB(CURDATE(), INTERVAL 14 DAY)')
+            ->select([
+                't.transac_id',
+                't.Product_detail',
+                't.product_value',
+                'c.company',
+                'current_step.level as step_level',
+                DB::raw('COALESCE(t.date_of_closing_of_sale, t.sales_can_be_close) as due_date'),
+            ])
+            ->orderByRaw('CASE WHEN COALESCE(t.date_of_closing_of_sale, t.sales_can_be_close) < CURDATE() THEN 1 ELSE 0 END ASC')
+            ->orderByRaw('ABS(DATEDIFF(COALESCE(t.date_of_closing_of_sale, t.sales_can_be_close), CURDATE())) ASC')
+            ->limit(4)
+            ->get();
         
         return view('user.dashboard', compact(
             'saleStepData',
@@ -54,7 +96,10 @@ class UserController extends Controller
             'sumValuePercentData',
             'availableYears',
             'selectedYear',
-            'quarter'
+            'quarter',
+            'projectCount',
+            'recentProjects',
+            'attentionProjects'
         ));
     }
 
@@ -71,6 +116,7 @@ class UserController extends Controller
             $selectedYear = (string) (int) $yearInput;
         }
         $quarter = $request->get('quarter');
+        $status = $request->get('status');
 
         // Get available years (table rows are loaded via dashboardTableData AJAX)
         $availableYears = DB::table('transactional')
@@ -86,7 +132,36 @@ class UserController extends Controller
             rsort($availableYears);
         }
 
-        return view('user.dashboard_table', compact('availableYears', 'selectedYear', 'quarter'));
+        $summaryQuery = DB::table('transactional as t')
+            ->whereNull('t.deleted_at')
+            ->where('t.user_id', $userId)
+            ->leftJoin('step as s', 't.Step_id', '=', 's.level_id');
+
+        if ($selectedYear !== 'all') {
+            $summaryQuery->where('t.fiscalyear', (int) $selectedYear);
+        }
+        if ($quarter) {
+            $summaryQuery->whereRaw('QUARTER(t.contact_start_date) = ?', [$quarter]);
+        }
+        if ($status) {
+            $summaryQuery->where('t.Step_id', (int) $status);
+        }
+
+        $projectSummary = $summaryQuery->selectRaw('
+            COUNT(t.transac_id) as total_count,
+            COALESCE(SUM(t.product_value), 0) as total_value,
+            SUM(CASE WHEN s.orderlv = 5 THEN 1 ELSE 0 END) as win_count,
+            SUM(CASE WHEN s.orderlv = 6 THEN 1 ELSE 0 END) as lost_count
+        ')->first();
+
+        $projectSummary->active_count = max(
+            (int) $projectSummary->total_count - (int) $projectSummary->win_count - (int) $projectSummary->lost_count,
+            0
+        );
+
+        $availableSteps = Step::orderBy('orderlv')->get(['level_id', 'level']);
+
+        return view('user.dashboard_table', compact('availableYears', 'availableSteps', 'selectedYear', 'quarter', 'status', 'projectSummary'));
     }
 
     public function dashboardTableData(Request $request)
@@ -94,6 +169,7 @@ class UserController extends Controller
         $userId = auth()->id();
         $year    = $request->get('year');
         $quarter = $request->get('quarter');
+        $status  = $request->get('status');
 
         $draw   = (int) $request->input('draw', 1);
         $start  = max((int) $request->input('start', 0), 0);
@@ -117,6 +193,9 @@ class UserController extends Controller
         }
         if ($quarter) {
             $base->whereRaw('QUARTER(t.contact_start_date) = ?', [$quarter]);
+        }
+        if ($status) {
+            $base->where('t.Step_id', (int) $status);
         }
 
         $total = (clone $base)->count('t.transac_id');
@@ -215,6 +294,53 @@ class UserController extends Controller
     }
 
     public function chartDetail(Request $request)
+    {
+        $userId = (int) auth()->id();
+        $type = (string) $request->query('type');
+        $value = $request->query('value');
+        $value2 = $request->query('value2');
+        $year = $this->resolveDashboardYearFilter($request)['year'];
+        $quarter = in_array((string) $request->query('quarter'), ['1', '2', '3', '4'], true)
+            ? (int) $request->query('quarter')
+            : null;
+        $effectiveDate = $this->dashboardEffectiveDateSql();
+
+        $query = $this->accurateUserDashboardBaseQuery($userId, $year, $quarter)
+            ->leftJoin('company_catalog as detail_company', 't.company_id', '=', 'detail_company.company_id')
+            ->leftJoin('product_group as detail_product', 't.Product_id', '=', 'detail_product.product_id')
+            ->leftJoin('team_catalog as detail_team', 't.team_id', '=', 'detail_team.team_id');
+
+        switch ($type) {
+            case 'month':
+                $query->where('current_step.orderlv', 5)
+                    ->whereRaw("DATE_FORMAT({$effectiveDate}, '%Y-%m') = ?", [$value]);
+                break;
+            case 'step':
+                $query->whereRaw('COALESCE(current_step.orderlv, 0) = ?', [(int) $value]);
+                if ($value2) {
+                    $query->whereRaw("DATE_FORMAT({$effectiveDate}, '%Y-%m') = ?", [$value2]);
+                }
+                break;
+            case 'product':
+                $query->where('t.Product_id', $value);
+                break;
+            case 'user_forecast':
+                break;
+            case 'user_win':
+                $query->where('current_step.orderlv', 5);
+                break;
+            default:
+                return response()->json([]);
+        }
+
+        return response()->json($query
+            ->selectRaw("t.transac_id, t.Product_detail, t.product_value, detail_company.company, detail_product.product as product_group, detail_team.team, COALESCE(current_step.level, 'ยังไม่ระบุสถานะ') as step_name, latest_step.date as win_date, t.contact_start_date")
+            ->orderByDesc('t.product_value')
+            ->get());
+    }
+
+    /** @deprecated Kept temporarily until the shared dashboard rollout is accepted. */
+    private function legacyChartDetail(Request $request)
     {
         $userId = auth()->id();
         $type = $request->get('type');
@@ -360,6 +486,26 @@ class UserController extends Controller
 
     public function winProjects(Request $request)
     {
+        $userId = (int) auth()->id();
+        $year = $this->resolveDashboardYearFilter($request)['year'];
+        $quarter = in_array((string) $request->query('quarter'), ['1', '2', '3', '4'], true)
+            ? (int) $request->query('quarter')
+            : null;
+
+        $projects = $this->accurateUserDashboardBaseQuery($userId, $year, $quarter)
+            ->leftJoin('company_catalog as win_company', 't.company_id', '=', 'win_company.company_id')
+            ->leftJoin('product_group as win_product', 't.Product_id', '=', 'win_product.product_id')
+            ->where('current_step.orderlv', 5)
+            ->selectRaw('t.transac_id, t.Product_detail, t.product_value, win_company.company, win_product.product as product_group, DATE_FORMAT(latest_step.date, "%Y-%m-%d") as win_date')
+            ->orderByDesc('latest_step.date')
+            ->get();
+
+        return response()->json($projects);
+    }
+
+    /** @deprecated Kept temporarily until the shared dashboard rollout is accepted. */
+    private function legacyWinProjects(Request $request)
+    {
         $userId = auth()->id();
         $year = $this->resolveDashboardYearFilter($request)['year'];
         $quarter = $request->get('quarter');
@@ -431,7 +577,7 @@ class UserController extends Controller
     public function storeSales(Request $request)
     {
         // Validation - simplified for better performance
-        $validated = $request->validate([
+        $validator = Validator::make($request->all(), [
             'Product_detail' => 'required|max:255',
             'company_id' => 'required|integer|exists:company_catalog,company_id',
             'product_value' => 'required',
@@ -446,6 +592,8 @@ class UserController extends Controller
             'step_date' => 'nullable|array',
             'step_date.*' => 'nullable|date',
         ]);
+        ProjectTimelineValidator::attach($validator, $request->all());
+        $validated = $validator->validate();
 
         abort_unless($this->currentUserBelongsToTeam((int) $validated['team_id']), 403);
 
@@ -453,13 +601,7 @@ class UserController extends Controller
         $productValue = str_replace(',', '', $request->product_value);
 
         // Get the highest step level selected
-        $stepId = null;
-        if ($request->has('step') && is_array($request->step)) {
-            $selectedSteps = array_keys(array_filter($request->step));
-            if (!empty($selectedSteps)) {
-                $stepId = max($selectedSteps);
-            }
-        }
+        $stepId = ProjectTimelineValidator::latestSelectedStepId($request->all());
 
         // Create transactional record
         $transactional = Transactional::create([
@@ -600,7 +742,7 @@ class UserController extends Controller
             ->where('user_id', auth()->id())
             ->firstOrFail();
 
-        $validator = \Validator::make($request->all(), [
+        $validator = Validator::make($request->all(), [
             'Product_detail'           => 'required|max:255',
             'company_id'               => 'required|integer|exists:company_catalog,company_id',
             'product_value'            => 'required',
@@ -615,6 +757,7 @@ class UserController extends Controller
             'step_date'                => 'nullable|array',
             'step_date.*'              => 'nullable|date',
         ]);
+        ProjectTimelineValidator::attach($validator, $request->all());
 
         if ($validator->fails()) {
             return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
@@ -625,13 +768,7 @@ class UserController extends Controller
         try {
             $productValue = str_replace(',', '', $request->product_value);
 
-            $stepId = null;
-            if ($request->has('step') && is_array($request->step)) {
-                $selectedSteps = array_keys(array_filter($request->step));
-                if (!empty($selectedSteps)) {
-                    $stepId = max($selectedSteps);
-                }
-            }
+            $stepId = ProjectTimelineValidator::latestSelectedStepId($request->all());
 
             $transaction->update([
                 'company_id'               => $request->company_id,
@@ -679,7 +816,7 @@ class UserController extends Controller
             ->where('user_id', auth()->id())
             ->firstOrFail();
         
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'Product_detail' => 'required|max:255',
             'company_id' => 'required|integer|exists:company_catalog,company_id',
             'product_value' => 'required',
@@ -694,19 +831,15 @@ class UserController extends Controller
             'step_date' => 'nullable|array',
             'step_date.*' => 'nullable|date',
         ]);
+        ProjectTimelineValidator::attach($validator, $request->all());
+        $validator->validate();
 
         abort_unless($this->currentUserBelongsToTeam((int) $request->team_id), 403);
 
         try {
             $productValue = str_replace(',', '', $request->product_value);
 
-            $stepId = null;
-            if ($request->has('step') && is_array($request->step)) {
-                $selectedSteps = array_keys(array_filter($request->step));
-                if (!empty($selectedSteps)) {
-                    $stepId = max($selectedSteps);
-                }
-            }
+            $stepId = ProjectTimelineValidator::latestSelectedStepId($request->all());
 
             $transaction->update([
                 'company_id' => $request->company_id,
@@ -755,8 +888,14 @@ class UserController extends Controller
         $roles = RoleCatalog::orderBy('role')->get();
         $positions = Position::orderBy('position')->get();
         $twoFactorEnabled = $user->two_factor_enabled;
+        $profileStats = DB::table('transactional as t')
+            ->leftJoin('step as s', 't.Step_id', '=', 's.level_id')
+            ->whereNull('t.deleted_at')
+            ->where('t.user_id', $user->user_id)
+            ->selectRaw('COUNT(t.transac_id) as project_count, SUM(CASE WHEN s.orderlv = 5 THEN 1 ELSE 0 END) as win_count')
+            ->first();
         
-        return view('user.profile', compact('user', 'roles', 'positions', 'twoFactorEnabled'));
+        return view('user.profile', compact('user', 'roles', 'positions', 'twoFactorEnabled', 'profileStats'));
     }
 
     public function toggleTwoFactor(Request $request)
@@ -916,105 +1055,30 @@ class UserController extends Controller
 
     private function getSaleStepData($userId, $year = null, $quarter = null)
     {
-        $params = [$userId];
-        $extraWhere = "";
-        
-        if ($year) {
-            $extraWhere .= ' AND t.fiscalyear = ?';
-            $params[] = $year;
-        }
-        
-        if ($quarter) {
-            $extraWhere .= ' AND QUARTER(t.contact_start_date) = ?';
-            $params[] = $quarter;
-        }
-        
-        return DB::select("
-            SELECT 
-                DATE_FORMAT(ts.date, '%Y-%m') as month,
-                SUM(CASE WHEN s.orderlv = 1 THEN t.product_value ELSE 0 END) as present_value,
-                SUM(CASE WHEN s.orderlv = 2 THEN t.product_value ELSE 0 END) as budgeted_value,
-                SUM(CASE WHEN s.orderlv = 3 THEN t.product_value ELSE 0 END) as tor_value,
-                SUM(CASE WHEN s.orderlv = 4 THEN t.product_value ELSE 0 END) as bidding_value,
-                SUM(CASE WHEN s.orderlv = 5 THEN t.product_value ELSE 0 END) as win_value,
-                SUM(CASE WHEN s.orderlv = 6 THEN t.product_value ELSE 0 END) as lost_value
-            FROM transactional t
-            JOIN transactional_step ts ON t.transac_id = ts.transac_id
-            JOIN step s ON s.level_id = ts.level_id
-            WHERE (ts.transacstep_id, ts.transac_id) IN (
-                SELECT MAX(ts2.transacstep_id), ts2.transac_id
-                FROM transactional_step ts2
-                GROUP BY ts2.transac_id
-            )
-            AND t.user_id = ?
-            {$extraWhere}
-            GROUP BY DATE_FORMAT(ts.date, '%Y-%m')
-            ORDER BY month
-        ", $params);
+        $effectiveDate = $this->dashboardEffectiveDateSql();
+
+        return $this->accurateUserDashboardBaseQuery((int) $userId, $year, $quarter)
+            ->selectRaw("DATE_FORMAT({$effectiveDate}, '%Y-%m') as month")
+            ->selectRaw('SUM(CASE WHEN current_step.orderlv = 1 THEN t.product_value ELSE 0 END) as present_value')
+            ->selectRaw('SUM(CASE WHEN current_step.orderlv = 2 THEN t.product_value ELSE 0 END) as budgeted_value')
+            ->selectRaw('SUM(CASE WHEN current_step.orderlv = 3 THEN t.product_value ELSE 0 END) as tor_value')
+            ->selectRaw('SUM(CASE WHEN current_step.orderlv = 4 THEN t.product_value ELSE 0 END) as bidding_value')
+            ->selectRaw('SUM(CASE WHEN current_step.orderlv = 5 THEN t.product_value ELSE 0 END) as win_value')
+            ->selectRaw('SUM(CASE WHEN current_step.orderlv = 6 THEN t.product_value ELSE 0 END) as lost_value')
+            ->groupByRaw("DATE_FORMAT({$effectiveDate}, '%Y-%m')")
+            ->orderBy('month')
+            ->get();
     }
 
     private function getWinForecastData($userId, $year = null, $quarter = null)
     {
-        // Target from user_forecast_target
-        $targetParams = [$userId];
-        $targetWhere = "";
-        if ($year) {
-            $targetWhere .= " AND fiscal_year = ?";
-            $targetParams[] = $year;
-        }
-        $targetResult = DB::select("
-            SELECT COALESCE(SUM(target_value), 0) as target_value
-            FROM user_forecast_target
-            WHERE user_id = ? {$targetWhere}
-        ", $targetParams);
-        $target = $targetResult[0]->target_value ?? 0;
-
-        // Forecast = sum of all transactions for this user
-        $forecastParams = [$userId];
-        $forecastWhere = "";
-        if ($year) {
-            $forecastWhere .= " AND t.fiscalyear = ?";
-            $forecastParams[] = $year;
-        }
-        if ($quarter) {
-            $forecastWhere .= " AND QUARTER(t.contact_start_date) = ?";
-            $forecastParams[] = $quarter;
-        }
-        $forecastResult = DB::select("
-            SELECT COALESCE(SUM(t.product_value), 0) as forecast_value
-            FROM transactional t
-            WHERE t.user_id = ? {$forecastWhere}
-        ", $forecastParams);
-        $forecast = $forecastResult[0]->forecast_value ?? 0;
-
-        // Win = sum of transactions whose latest step is WIN (level = 5)
-        $winParams = [$userId];
-        $winWhere = "";
-        if ($year) {
-            $winWhere .= " AND t.fiscalyear = ?";
-            $winParams[] = $year;
-        }
-        if ($quarter) {
-            $winWhere .= " AND QUARTER(t.contact_start_date) = ?";
-            $winParams[] = $quarter;
-        }
-        $winResult = DB::select("
-            SELECT COALESCE(SUM(t.product_value), 0) as win_value
-            FROM transactional t
-            JOIN (
-                SELECT ts.transac_id
-                FROM transactional_step ts
-                JOIN step s ON s.level_id = ts.level_id
-                WHERE s.orderlv = 5
-                AND (ts.transacstep_id, ts.transac_id) IN (
-                    SELECT MAX(ts2.transacstep_id), ts2.transac_id
-                    FROM transactional_step ts2
-                    GROUP BY ts2.transac_id
-                )
-            ) wintrans ON wintrans.transac_id = t.transac_id
-            WHERE t.user_id = ? {$winWhere}
-        ", $winParams);
-        $win = $winResult[0]->win_value ?? 0;
+        $base = $this->accurateUserDashboardBaseQuery((int) $userId, $year, $quarter);
+        $target = DB::table('user_forecast_target')
+            ->where('user_id', $userId)
+            ->when($year !== null, fn ($query) => $query->where('fiscal_year', $year))
+            ->sum('target_value');
+        $forecast = (clone $base)->sum('t.product_value');
+        $win = (clone $base)->where('current_step.orderlv', 5)->sum('t.product_value');
 
         return (object)[
             'Target' => $target,
@@ -1024,6 +1088,17 @@ class UserController extends Controller
     }
 
     private function getSumValuePercentData($userId, $year = null, $quarter = null)
+    {
+        return $this->accurateUserDashboardBaseQuery((int) $userId, $year, $quarter)
+            ->leftJoin('product_group as pg', 'pg.product_id', '=', 't.Product_id')
+            ->selectRaw("pg.product_id, COALESCE(pg.product, 'ไม่ระบุ') as product, SUM(t.product_value) as sum_value")
+            ->groupBy('pg.product_id', 'pg.product')
+            ->havingRaw('SUM(t.product_value) > 0')
+            ->get();
+    }
+
+    /** @deprecated Kept temporarily until the shared dashboard rollout is accepted. */
+    private function legacyGetSumValuePercentData($userId, $year = null, $quarter = null)
     {
         $params = [$userId];
         $whereClause = 'WHERE t.user_id = ?';
@@ -1049,6 +1124,41 @@ class UserController extends Controller
             GROUP BY pg.product_id, pg.product
             HAVING SUM(t.product_value) > 0
         ", $params);
+    }
+
+    private function accurateUserDashboardBaseQuery(int $userId, ?int $year, ?int $quarter)
+    {
+        $latestIds = DB::table('transactional_step')
+            ->selectRaw('transac_id, MAX(transacstep_id) as max_step_id')
+            ->groupBy('transac_id');
+
+        $latestSteps = DB::table('transactional_step as latest_history')
+            ->joinSub($latestIds, 'latest_ids', function ($join) {
+                $join->on('latest_ids.transac_id', '=', 'latest_history.transac_id')
+                    ->on('latest_ids.max_step_id', '=', 'latest_history.transacstep_id');
+            })
+            ->select('latest_history.transac_id', 'latest_history.level_id', 'latest_history.date');
+
+        $query = DB::table('transactional as t')
+            ->leftJoinSub($latestSteps, 'latest_step', 'latest_step.transac_id', '=', 't.transac_id')
+            ->leftJoin('step as current_step', 'current_step.level_id', '=', 'latest_step.level_id')
+            ->whereNull('t.deleted_at')
+            ->where('t.user_id', $userId);
+
+        if ($year !== null) {
+            $query->where('t.fiscalyear', $year);
+        }
+
+        if ($quarter !== null) {
+            $query->whereRaw('QUARTER(' . $this->dashboardEffectiveDateSql() . ') = ?', [$quarter]);
+        }
+
+        return $query;
+    }
+
+    private function dashboardEffectiveDateSql(): string
+    {
+        return 'COALESCE(latest_step.date, t.contact_start_date)';
     }
 
     private function resolveDashboardYearFilter(Request $request)

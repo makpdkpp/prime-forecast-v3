@@ -43,9 +43,15 @@ class XssRenderingTest extends TestCase
         foreach ($views as $view) {
             $contents = file_get_contents($root.DIRECTORY_SEPARATOR.str_replace('/', DIRECTORY_SEPARATOR, $view));
 
-            $this->assertStringContainsString('function escapeHtml(value)', $contents);
-            $this->assertStringContainsString('escapeHtml(p.Product_detail)', $contents);
-            $this->assertStringNotContainsString('${p.Product_detail ||', $contents);
+            if ($view === 'resources/views/user/dashboard.blade.php') {
+                $this->assertStringContainsString('td.textContent = value', $contents);
+                $this->assertStringContainsString('amount.textContent = Number(', $contents);
+                $this->assertStringNotContainsString('body.innerHTML +=', $contents);
+            } else {
+                $this->assertStringContainsString('function escapeHtml(value)', $contents);
+                $this->assertStringContainsString('escapeHtml(p.Product_detail)', $contents);
+                $this->assertStringNotContainsString('${p.Product_detail ||', $contents);
+            }
         }
     }
 }

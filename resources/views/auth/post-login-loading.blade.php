@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>กำลังเตรียม Dashboard | Prime Forecast V2</title>
+    <title>กำลังเตรียม Dashboard | Prime Forecast V3</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
     <style>
         body {
@@ -58,7 +58,7 @@
 </head>
 <body>
     <div class="loading-card">
-        <div class="brand">Prime Forecast V2</div>
+        <div class="brand">Prime Forecast V3</div>
         <h5 class="mb-2">กำลังเตรียม Dashboard</h5>
         <p class="subtitle mb-3">กำลังโหลดข้อมูลเริ่มต้นของคุณ...</p>
         <div class="progress">

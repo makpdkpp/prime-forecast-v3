@@ -13,13 +13,13 @@ return new class extends Migration
     {
         Schema::create('transactional_transfer_history', function (Blueprint $table) {
             $table->id('transfer_id');
-            $table->integer('transac_id');
-            $table->integer('from_user_id');
-            $table->integer('to_user_id');
-            $table->integer('transferred_by');
+            $table->unsignedInteger('transac_id');
+            $table->unsignedInteger('from_user_id');
+            $table->unsignedInteger('to_user_id');
+            $table->unsignedInteger('transferred_by');
             $table->text('transfer_reason')->nullable();
-            $table->integer('old_team_id')->nullable();
-            $table->integer('new_team_id')->nullable();
+            $table->unsignedInteger('old_team_id')->nullable();
+            $table->unsignedInteger('new_team_id')->nullable();
             $table->timestamp('transferred_at')->useCurrent();
             
             $table->foreign('transac_id')->references('transac_id')->on('transactional')->onDelete('cascade');

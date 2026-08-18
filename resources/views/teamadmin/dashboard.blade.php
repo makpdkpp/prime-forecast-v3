@@ -3,7 +3,16 @@
 @section('title', 'Admin Dashboard | PrimeForecast')
 
 @section('content_header')
-    <h1>Dashboard</h1>
+    <div class="pf-exec-head">
+        <div>
+            <div class="pf-exec-eyebrow">Team performance</div>
+            <h1>ภาพรวมทีมขาย</h1>
+            <p>เห็นเป้าหมาย Pipeline และผลงานสมาชิกในทีมเพื่อวางแผนการขายได้เร็วขึ้น</p>
+        </div>
+        <div class="pf-exec-actions">
+            <a href="{{ route('teamadmin.dashboard.table') }}" class="btn btn-primary"><i class="fas fa-stream"></i> Sales Pipeline</a>
+        </div>
+    </div>
 @stop
 
 @section('content')
@@ -838,6 +847,7 @@
 @stop
 
 @section('css')
+<link rel="stylesheet" href="{{ asset('css/executive-v3.css') }}">
 <style>
     .content-wrapper {
         background-color: #b3d6e4;

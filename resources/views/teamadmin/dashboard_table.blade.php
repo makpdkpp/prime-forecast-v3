@@ -3,7 +3,16 @@
 @section('title', 'Dashboard (ตาราง) | PrimeForecast')
 
 @section('content_header')
-    <h1>Sales Dashboard (ตาราง)</h1>
+    <div class="pf-exec-head">
+        <div>
+            <div class="pf-exec-eyebrow">Team operations</div>
+            <h1>Team Pipeline</h1>
+            <p>ติดตามโครงการของทีม ค้นหา ส่งออก และเปิดรายละเอียดเพื่อจัดการได้ทันที</p>
+        </div>
+        <div class="pf-exec-actions">
+            <a href="{{ route('teamadmin.dashboard') }}" class="btn btn-outline-primary"><i class="fas fa-chart-pie"></i> ภาพรวมทีม</a>
+        </div>
+    </div>
 @stop
 
 @section('content')
@@ -480,6 +489,7 @@ $(function () {
 @stop
 
 @section('css')
+<link rel="stylesheet" href="{{ asset('css/executive-v3.css') }}">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap4.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap4.min.css">

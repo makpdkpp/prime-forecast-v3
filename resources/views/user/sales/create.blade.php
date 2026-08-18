@@ -1,404 +1,77 @@
 @extends('adminlte::page')
 
-@section('title', 'เพิ่มรายละเอียดการขาย | PrimeForecast')
+@section('title', 'เพิ่มโครงการ | PrimeForecast')
 
 @section('content_header')
-    <h1>เพิ่มรายละเอียดการขาย</h1>
 @stop
 
 @section('content')
-    <div class="row">
-        <div class="col-md-8 offset-md-2">
-            <div class="card">
-                <div class="card-header text-center">
-                    <h3 class="card-title">แบบฟอร์มเพิ่มรายละเอียดการขาย</h3>
-                    <p class="lead mb-0">Sales: {{ Auth::user()->nname ?: 'N/A' }}</p>
-                </div>
-                <div class="card-body">
-                    <form action="{{ route('user.sales.store') }}" method="POST" id="salesForm" autocomplete="off">
-                        @csrf
-                        <input type="hidden" name="user_id" value="{{ Auth::id() }}">
+<div class="pf-v3">
+    <main class="pf-shell">
+        @if($errors->any())
+            <div class="pf-alert pf-alert-danger"><i class="fas fa-exclamation-circle"></i><span>ยังมีข้อมูลบางรายการไม่ครบ กรุณาตรวจสอบช่องที่ระบุด้านล่าง</span></div>
+        @endif
 
-                        <div class="row">
-                            <div class="col-sm-12 form-group">
-                                <label for="Product_detail">ชื่อโครงการ</label>
-                                <input type="text" name="Product_detail" id="Product_detail" class="form-control @error('Product_detail') is-invalid @enderror" required>
-                                @error('Product_detail') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6 form-group">
-                                <label for="company_id">หน่วยงาน / บริษัท</label>
-                                <div class="input-group">
-                                    <select name="company_id" id="company_id" class="form-control" required>
-                                        <option value="">-- เลือกบริษัท/หน่วยงาน --</option>
-                                        @foreach($companies as $company)
-                                            <option value="{{ $company->company_id }}">{{ $company->company }}</option>
-                                        @endforeach
-                                    </select>
-                                    <div class="input-group-append">
-                                        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#requestCompanyModal">
-                                            <i class="fas fa-plus-circle"></i> ขอเพิ่ม
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6 form-group">
-                                <label for="product_value">มูลค่า (บาท)</label>
-                                <input type="text" name="product_value" id="product_value" class="form-control @error('product_value') is-invalid @enderror" placeholder="0" required>
-                                @error('product_value') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6 form-group">
-                                <label for="Source_budget_id">แหล่งที่มาของงบประมาณ</label>
-                                <select name="Source_budget_id" id="Source_budget_id" class="form-control @error('Source_budget_id') is-invalid @enderror" required>
-                                    <option value="">-- เลือกแหล่งที่มาของงบประมาณ --</option>
-                                    @foreach($sources as $source)
-                                        <option value="{{ $source->Source_budget_id }}">{{ $source->Source_budge }}</option>
-                                    @endforeach
-                                </select>
-                                @error('Source_budget_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                            </div>
-                            <div class="col-md-6 form-group">
-                                <label for="fiscalyear">ปีงบประมาณ</label>
-                                <select name="fiscalyear" id="fiscalyear" class="form-control @error('fiscalyear') is-invalid @enderror" required>
-                                    <option value="">-- เลือกปีงบประมาณ --</option>
-                                    @php
-                                        $currentYear = date('Y');
-                                        for ($i = 0; $i < 5; $i++) {
-                                            $year = $currentYear + $i;
-                                            $displayYear = $year + 543;
-                                            echo "<option value=\"$year\">$displayYear</option>";
-                                        }
-                                    @endphp
-                                </select>
-                                @error('fiscalyear') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-4 form-group">
-                                <label for="Product_id">กลุ่มสินค้า</label>
-                                <select name="Product_id" id="Product_id" class="form-control @error('Product_id') is-invalid @enderror" required>
-                                    <option value="">-- เลือกสินค้า --</option>
-                                    @foreach($products as $product)
-                                        <option value="{{ $product->product_id }}">{{ $product->product }}</option>
-                                    @endforeach
-                                </select>
-                                @error('Product_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                            </div>
-                            <div class="col-md-4 form-group">
-                                <label for="team_id">ทีมขาย</label>
-                                <select name="team_id" id="team_id" class="form-control @error('team_id') is-invalid @enderror" required>
-                                    <option value="">-- เลือกทีม --</option>
-                                    @foreach($teams as $team)
-                                        <option value="{{ $team->team_id }}">{{ $team->team }}</option>
-                                    @endforeach
-                                </select>
-                                @error('team_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                            </div>
-                            <div class="col-md-4 form-group">
-                                <label for="priority_id">โอกาสชนะ</label>
-                                <select name="priority_id" id="priority_id" class="form-control @error('priority_id') is-invalid @enderror">
-                                    <option value="">-- เลือกระดับ --</option>
-                                    @foreach($priorities as $priority)
-                                        <option value="{{ $priority->priority_id }}">{{ $priority->priority }}</option>
-                                    @endforeach
-                                </select>
-                                @error('priority_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-4 form-group">
-                                <label for="contact_start_date">วันที่เริ่มโครงการ</label>
-                                <input type="text" name="contact_start_date" id="contact_start_date" class="form-control flatpickr-thai @error('contact_start_date') is-invalid @enderror" required readonly>
-                                @error('contact_start_date') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                            </div>
-                            <div class="col-md-4 form-group">
-                                <label for="date_of_closing_of_sale">วันที่คาดว่าจะ Bidding</label>
-                                <input type="text" name="date_of_closing_of_sale" id="date_of_closing_of_sale" class="form-control flatpickr-thai" readonly>
-                            </div>
-                            <div class="col-md-4 form-group">
-                                <label for="sales_can_be_close">วันที่คาดจะเซ็นสัญญา</label>
-                                <input type="text" name="sales_can_be_close" id="sales_can_be_close" class="form-control flatpickr-thai" readonly>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label>สถานะ</label>
-                            <div class="row">
-                                @foreach($steps as $step)
-                                    @php
-                                        $key = strtolower($step->level);
-                                        $field = $key . '_date';
-                                    @endphp
-                                    <div class="col-12 col-lg-6 mb-2">
-                                        <div class="process-item d-flex align-items-center gap-2" style="background: #f8f9fa; padding: 8px 12px; border-radius: 6px; border: 1px solid #dee2e6;">
-                                            <input type="hidden" name="step[{{ $step->level_id }}]" value="0">
-                                            <div class="icheck-primary d-inline">
-                                                <input type="checkbox" id="step_cb_{{ $step->level_id }}" name="step[{{ $step->level_id }}]" value="{{ $step->level_id }}" onchange="toggleDate('{{ $step->level_id }}')">
-                                                <label for="step_cb_{{ $step->level_id }}" style="margin-bottom: 0; font-weight: normal !important;">{{ $step->level }}</label>
-                                            </div>
-                                            <input type="text" class="form-control form-control-sm ml-2 flatpickr-step" id="step_date_{{ $step->level_id }}" name="step_date[{{ $step->level_id }}]" style="width: auto;" disabled readonly>
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-sm-12 form-group">
-                                <label for="remark">หมายเหตุ</label>
-                                <textarea name="remark" id="remark" rows="3" class="form-control"></textarea>
-                            </div>
-                        </div>
-
-                        <div class="card mt-3">
-                            <div class="card-header bg-light">
-                                <h5 class="card-title mb-0"><i class="fas fa-user-tie"></i> ข้อมูลลูกค้า (ไม่บังคับ)</h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-4 form-group">
-                                        <label for="contact_person">ชื่อผู้ติดต่อ</label>
-                                        <input type="text" name="contact_person" id="contact_person" class="form-control" placeholder="ชื่อ-นามสกุล">
-                                    </div>
-                                    <div class="col-md-4 form-group">
-                                        <label for="contact_phone">เบอร์โทรศัพท์</label>
-                                        <input type="text" name="contact_phone" id="contact_phone" class="form-control" placeholder="0xx-xxx-xxxx">
-                                    </div>
-                                    <div class="col-md-4 form-group">
-                                        <label for="contact_email">อีเมล</label>
-                                        <input type="email" name="contact_email" id="contact_email" class="form-control" placeholder="email@example.com">
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-sm-12 form-group">
-                                        <label for="contact_note">อื่นๆ</label>
-                                        <textarea name="contact_note" id="contact_note" rows="2" class="form-control" placeholder="รายละเอียดเพิ่มเติมเกี่ยวกับลูกค้า"></textarea>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="text-right mt-4">
-                            <a href="{{ route('user.dashboard') }}" class="btn btn-secondary">กลับหน้าหลัก</a>
-                            <button type="submit" class="btn btn-danger">บันทึกข้อมูล</button>
-                        </div>
-                    </form>
-                </div>
+        <header class="pf-page-head">
+            <div>
+                <a href="{{ route('user.dashboard.table') }}" class="pf-back"><i class="fas fa-arrow-left"></i> กลับรายการโครงการ</a>
+                <h1>เพิ่มโครงการใหม่</h1>
+                <p>กรอกข้อมูลหลักให้ครบเพื่อสร้าง Forecast ที่ติดตามต่อได้ทันที</p>
             </div>
-        </div>
-    </div>
+            <span class="pf-status"><i class="far fa-file-alt"></i> รายการใหม่</span>
+        </header>
 
-    <!-- Modal for requesting new company -->
-    <div class="modal fade" id="requestCompanyModal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalLabel">แบบฟอร์มขอเพิ่มหน่วยงาน/บริษัท</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+        <section class="pf-form-progress" aria-label="ขั้นตอนการเพิ่มโครงการ">
+            <div class="pf-progress-step active"><i>1</i><span><b>ข้อมูลโครงการ</b><small>ชื่อ ลูกค้า และมูลค่า</small></span></div>
+            <div class="pf-progress-step"><i>2</i><span><b>แผนการขาย</b><small>สถานะและวันสำคัญ</small></span></div>
+            <div class="pf-progress-step"><i>3</i><span><b>ข้อมูลติดต่อ</b><small>รายละเอียดเพิ่มเติม</small></span></div>
+        </section>
+
+        <form action="{{ route('user.sales.store') }}" method="POST" id="salesForm" data-pf-sales-form autocomplete="off">
+            @csrf
+            <div class="pf-form-layout">
+                <div class="pf-card pf-form-card">
+                    @include('user.sales._form-fields')
+
+                    <div class="pf-form-actions">
+                        <span class="pf-dirty" data-dirty-indicator><i class="fas fa-circle"></i>&nbsp; มีข้อมูลที่ยังไม่บันทึก</span>
+                        <a href="{{ route('user.dashboard.table') }}" class="pf-btn">ยกเลิก</a>
+                        <button type="submit" class="pf-btn pf-btn-primary"><i class="fas fa-check"></i> สร้างโครงการ</button>
+                    </div>
                 </div>
-                <form id="companyRequestForm">
-                    @csrf
-                    <div class="modal-body">
-                        <div class="form-group">
-                            <label for="newCompanyName">ชื่อหน่วยงาน/บริษัทที่ต้องการเพิ่ม</label>
-                            <input type="text" class="form-control" id="newCompanyName" name="company_name" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="companyNotes">รายละเอียดเพิ่มเติม (ถ้ามี)</label>
-                            <textarea class="form-control" id="companyNotes" name="notes" rows="3"></textarea>
-                        </div>
-                        <div id="requestStatus" class="mt-3"></div>
+
+                <aside class="pf-card pf-summary-card" aria-label="สรุปโครงการ">
+                    <div class="pf-summary-head"><span class="pf-project-icon">PF</span><div><small class="pf-muted">ตัวอย่างโครงการ</small><b data-summary-title>โครงการใหม่</b></div></div>
+                    <div class="pf-summary-value"><small>มูลค่าโครงการ</small><strong data-summary-value>฿0</strong></div>
+                    <div class="pf-summary-list">
+                        <div class="pf-summary-row"><span>ลูกค้า</span><b data-summary-company>-</b></div>
+                        <div class="pf-summary-row"><span>กลุ่มสินค้า</span><b data-summary-product>-</b></div>
+                        <div class="pf-summary-row"><span>ปีงบประมาณ</span><b data-summary-year>-</b></div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">ปิด</button>
-                        <button type="submit" class="btn btn-primary">ส่งคำขอ</button>
+                    <div class="pf-completion">
+                        <div class="pf-completion-head"><span>ความครบถ้วน</span><b data-completion-value>0%</b></div>
+                        <div class="pf-progress-bar"><i data-completion-bar style="width:0"></i></div>
+                        <small class="pf-muted">ช่องที่มีเครื่องหมาย * จำเป็นต้องกรอก</small>
                     </div>
-                </form>
+                    <div class="pf-alert mt-3 mb-0" style="background:#f7f6ff;border-color:#e5e2ff;color:#5149b7"><i class="fas fa-lightbulb"></i><small>ระบุวันที่ Bidding และวันที่คาดว่าจะปิดการขาย เพื่อให้ระบบแจ้งเตือนได้แม่นยำขึ้น</small></div>
+                </aside>
             </div>
-        </div>
-    </div>
-@stop
+        </form>
+    </main>
 
-@section('js')
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script>
-    function initThaiDatePicker(selector) {
-        flatpickr(selector, {
-            dateFormat: 'd/m/Y',
-            locale: {
-                firstDayOfWeek: 1,
-                weekdays: {
-                    shorthand: ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'],
-                    longhand: ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์']
-                },
-                months: {
-                    shorthand: ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'],
-                    longhand: ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม']
-                }
-            },
-            onChange: function(selectedDates, dateStr, instance) {
-                if (selectedDates.length > 0) {
-                    const date = selectedDates[0];
-                    const day = String(date.getDate()).padStart(2, '0');
-                    const month = String(date.getMonth() + 1).padStart(2, '0');
-                    const year = date.getFullYear() + 543;
-                    instance.input.value = `${day}/${month}/${year}`;
-                }
-            }
-        });
-    }
-    
-    // Initialize Thai date pickers
-    initThaiDatePicker('#contact_start_date');
-    initThaiDatePicker('#date_of_closing_of_sale');
-    initThaiDatePicker('#sales_can_be_close');
-    
-    // Initialize Flatpickr for step dates
-    document.querySelectorAll('.flatpickr-step').forEach(function(input) {
-        flatpickr(input, {
-            dateFormat: 'd/m/Y',
-            locale: {
-                firstDayOfWeek: 1,
-                weekdays: {
-                    shorthand: ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'],
-                    longhand: ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์']
-                },
-                months: {
-                    shorthand: ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'],
-                    longhand: ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม']
-                }
-            },
-            onChange: function(selectedDates, dateStr, instance) {
-                if (selectedDates.length > 0) {
-                    const date = selectedDates[0];
-                    const day = String(date.getDate()).padStart(2, '0');
-                    const month = String(date.getMonth() + 1).padStart(2, '0');
-                    const year = date.getFullYear() + 543;
-                    instance.input.value = `${day}/${month}/${year}`;
-                }
-            }
-        });
-    });
+    @include('user.partials.mobile-nav')
+</div>
 
-    // Convert Thai date back to YYYY-MM-DD before form submission
-    document.getElementById('salesForm').addEventListener('submit', function() {
-        document.querySelectorAll('.flatpickr-thai, .flatpickr-step').forEach(function(input) {
-            const thaiDate = input.value;
-            if (thaiDate && thaiDate.includes('/')) {
-                const parts = thaiDate.split('/');
-                if (parts.length === 3) {
-                    const day = parts[0];
-                    const month = parts[1];
-                    const buddhistYear = parseInt(parts[2]);
-                    const christianYear = buddhistYear - 543;
-                    input.value = `${christianYear}-${month}-${day}`;
-                }
-            }
-        });
-    });
-
-    // Product value formatting
-    const productValueInput = document.getElementById('product_value');
-    const fmt = function(v) {
-        v = v.replace(/[^0-9.]/g, '');
-        if (!v) return '';
-        const parts = v.split('.');
-        return (+parts[0]).toLocaleString('en-US') + (parts[1] ? '.' + parts[1].slice(0, 2) : '');
-    };
-    productValueInput.addEventListener('input', function() {
-        const p = productValueInput.selectionStart;
-        const l = productValueInput.value.length;
-        productValueInput.value = fmt(productValueInput.value);
-        productValueInput.setSelectionRange(p + (productValueInput.value.length - l), p + (productValueInput.value.length - l));
-    f.addEventListener('input', function() {
-        const p = f.selectionStart;
-        const l = f.value.length;
-        f.value = fmt(f.value);
-        f.setSelectionRange(p + (f.value.length - l), p + (f.value.length - l));
-    });
-    document.getElementById('salesForm').addEventListener('submit', function() {
-        f.value = f.value.replace(/,/g, '');
-    });
-})();
-
-function toggleDate(levelId) {
-    const checkbox = document.getElementById('step_cb_' + levelId);
-    const dateInput = document.getElementById('step_date_' + levelId);
-    if (!dateInput) return;
-    if (checkbox.checked) {
-        dateInput.removeAttribute('disabled');
-    } else {
-        dateInput.setAttribute('disabled', 'disabled');
-        dateInput.value = '';
-    }
-}
-
-// Company Request Form AJAX
-$('#companyRequestForm').on('submit', function(e) {
-    e.preventDefault();
-
-    var companyName = $('#newCompanyName').val();
-    if (companyName.trim() === '') {
-        alert('กรุณากรอกชื่อบริษัท');
-        return;
-    }
-
-    $('#requestStatus').html('<div class="alert alert-info">กำลังส่งคำขอ...</div>');
-    $('button[type="submit"]', this).prop('disabled', true);
-
-    $.ajax({
-        url: '{{ route("user.company.request") }}',
-        type: 'POST',
-        dataType: 'json',
-        data: $(this).serialize(),
-        success: function(response) {
-            if (response.success) {
-                $('#requestStatus').html('<div class="alert alert-success">' + response.message + '</div>');
-                setTimeout(function() {
-                    $('#requestCompanyModal').modal('hide');
-                    $('#companyRequestForm')[0].reset();
-                    $('#requestStatus').html('');
-                }, 2000);
-            } else {
-                $('#requestStatus').html('<div class="alert alert-danger">เกิดข้อผิดพลาด: ' + response.message + '</div>');
-            }
-        },
-        error: function(xhr) {
-            var errorMsg = 'เกิดข้อผิดพลาดในการเชื่อมต่อ';
-            if (xhr.responseJSON && xhr.responseJSON.message) {
-                errorMsg = xhr.responseJSON.message;
-            }
-            $('#requestStatus').html('<div class="alert alert-danger">' + errorMsg + '</div>');
-        },
-        complete: function() {
-            $('button[type="submit"]', '#companyRequestForm').prop('disabled', false);
-        }
-    });
-});
-</script>
+@include('user.sales._company-modal')
 @stop
 
 @section('css')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-<style>
-    .process-item {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-    .process-item input[type="checkbox"] { margin: 0; }
-    .process-item input[type="date"] { height: 32px; font-size: 14px; }
-    .content-wrapper {
-        background-color: #b3d6e4;
-    }
-</style>
+<link rel="stylesheet" href="{{ asset('css/sales-v3.css') }}">
+@stop
+
+@section('js')
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="{{ asset('js/sales-form-v3.js') }}"></script>
+<script src="{{ asset('js/sales-v3.js') }}"></script>
 @stop
