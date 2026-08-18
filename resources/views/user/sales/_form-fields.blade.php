@@ -91,11 +91,13 @@
         </div>
         <div class="pf-field">
             <label for="date_of_closing_of_sale">วันที่ Bidding</label>
-            <input type="text" id="date_of_closing_of_sale" name="date_of_closing_of_sale" data-pf-date value="{{ $fieldValue('date_of_closing_of_sale') }}" readonly placeholder="เลือกวันที่">
+            <input type="text" id="date_of_closing_of_sale" name="date_of_closing_of_sale" data-pf-date value="{{ $fieldValue('date_of_closing_of_sale') }}" readonly class="@error('date_of_closing_of_sale') is-invalid @enderror" placeholder="เลือกวันที่">
+            @error('date_of_closing_of_sale')<div class="pf-error">{{ $message }}</div>@enderror
         </div>
         <div class="pf-field">
             <label for="sales_can_be_close">วันที่คาดว่าจะปิดการขาย</label>
-            <input type="text" id="sales_can_be_close" name="sales_can_be_close" data-pf-date value="{{ $fieldValue('sales_can_be_close') }}" readonly placeholder="เลือกวันที่">
+            <input type="text" id="sales_can_be_close" name="sales_can_be_close" data-pf-date value="{{ $fieldValue('sales_can_be_close') }}" readonly class="@error('sales_can_be_close') is-invalid @enderror" placeholder="เลือกวันที่">
+            @error('sales_can_be_close')<div class="pf-error">{{ $message }}</div>@enderror
         </div>
         <div class="pf-field pf-field-full">
             <label for="remark">หมายเหตุโครงการ</label>
@@ -107,6 +109,7 @@
 <section class="pf-section" id="status-timeline">
     <div class="pf-section-title"><i class="fas fa-stream"></i><div><h2>สถานะและ Timeline</h2><p>เลือกขั้นตอนที่ดำเนินการแล้วและระบุวันที่ของแต่ละสถานะ</p></div></div>
     <div class="pf-step-list">
+        @error('step')<div class="pf-error pf-field-full">{{ $message }}</div>@enderror
         @foreach($steps as $step)
             @php
                 $hasSavedStep = isset($selectedSteps[$step->level_id]);
@@ -115,6 +118,7 @@
                     ? \Carbon\Carbon::parse($selectedSteps[$step->level_id]->date)->format('Y-m-d')
                     : '';
                 $stepDate = old('step_date.'.$step->level_id, $savedDate);
+                $stepDateErrorKey = 'step_date.'.$step->level_id;
             @endphp
             <div class="pf-step">
                 <div class="pf-step-check">
@@ -122,7 +126,10 @@
                     <input type="checkbox" id="step_{{ $step->level_id }}" name="step[{{ $step->level_id }}]" value="1" data-step-checkbox data-date-target="step_date_{{ $step->level_id }}" {{ $isChecked ? 'checked' : '' }}>
                     <label for="step_{{ $step->level_id }}">{{ $step->level }}</label>
                 </div>
-                <input type="text" id="step_date_{{ $step->level_id }}" name="step_date[{{ $step->level_id }}]" data-pf-date value="{{ $stepDate }}" readonly placeholder="เลือกวันที่" {{ $isChecked ? '' : 'disabled' }}>
+                <div class="pf-step-date">
+                    <input type="text" id="step_date_{{ $step->level_id }}" name="step_date[{{ $step->level_id }}]" data-pf-date value="{{ $stepDate }}" readonly class="@error($stepDateErrorKey) is-invalid @enderror" placeholder="เลือกวันที่" {{ $isChecked ? '' : 'disabled' }}>
+                    @error($stepDateErrorKey)<div class="pf-error">{{ $message }}</div>@enderror
+                </div>
             </div>
         @endforeach
     </div>

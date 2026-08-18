@@ -9,7 +9,17 @@
 <div class="pf-v3">
     <main class="pf-shell">
         @if($errors->any())
-            <div class="pf-alert pf-alert-danger"><i class="fas fa-exclamation-circle"></i><span>ยังมีข้อมูลบางรายการไม่ครบ กรุณาตรวจสอบช่องที่ระบุด้านล่าง</span></div>
+            <div class="pf-alert pf-alert-danger">
+                <i class="fas fa-exclamation-circle"></i>
+                <div>
+                    <span>บันทึกยังไม่สำเร็จ กรุณาตรวจสอบข้อมูลที่ระบุด้านล่าง</span>
+                    <ul class="pf-error-list">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            </div>
         @endif
 
         <header class="pf-page-head">

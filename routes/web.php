@@ -30,6 +30,7 @@ Route::post('/forgot-password', [AuthController::class, 'sendResetPasswordLink']
 Route::get('/reset-password/{token}', [AuthController::class, 'showResetPasswordForm'])->name('password.reset');
 Route::post('/reset-password/{token}', [AuthController::class, 'resetPassword'])->name('password.update');
 Route::get('/post-login-loading', [AuthController::class, 'postLoginLoading'])->name('postlogin.loading');
+Route::get('/logout', [AuthController::class, 'logout']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Registration routes (user invitation)

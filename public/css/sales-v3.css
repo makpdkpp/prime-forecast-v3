@@ -43,6 +43,7 @@
 .pf-alert { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 18px; border-radius: 12px; padding: 12px 14px; border: 1px solid; }
 .pf-alert-success { color: #08795b; background: #ecfdf7; border-color: #b7eedc; }
 .pf-alert-danger { color: #b4232b; background: #fff1f2; border-color: #fecdd3; }
+.pf-error-list { margin: 6px 0 0; padding-left: 18px; font-size: 12px; line-height: 1.6; }
 
 /* Dashboard */
 .pf-filterbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
@@ -138,6 +139,7 @@
 .pf-step-check { display: flex; align-items: center; gap: 8px; margin-bottom: 9px; }
 .pf-step-check label { margin: 0; font-size: 13px; }
 .pf-step input[type="checkbox"] { accent-color: var(--pf-primary); width: 16px; height: 16px; }
+.pf-step-date { min-width: 0; }
 .pf-summary-card { position: sticky; top: 18px; padding: 20px; }
 .pf-summary-head { display: flex; align-items: center; gap: 11px; padding-bottom: 16px; border-bottom: 1px solid var(--pf-border); }
 .pf-summary-head .pf-project-icon { width: 44px; height: 44px; }

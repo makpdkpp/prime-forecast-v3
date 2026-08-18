@@ -76,24 +76,35 @@ class ProjectTimelineValidationTest extends TestCase
     public function test_sales_create_endpoint_does_not_persist_an_invalid_timeline(): void
     {
         $before = DB::table('transactional')->count();
-        $response = $this->actingAs(User::query()->where('user_id', 3)->firstOrFail())
-            ->post(route('user.sales.store'), [
-                'Product_detail' => 'Invalid timeline should not persist',
-                'company_id' => 1,
-                'product_value' => '100,000',
-                'Source_budget_id' => 1,
-                'fiscalyear' => 2026,
-                'Product_id' => 1,
-                'team_id' => 1,
-                'priority_id' => 1,
-                'contact_start_date' => '2026-02-01',
-                'date_of_closing_of_sale' => '2025-12-30',
-                'sales_can_be_close' => '2026-03-01',
-                'step' => [4 => '1'],
-                'step_date' => [4 => '2025-10-31'],
-            ]);
+        $user = User::query()->where('user_id', 3)->firstOrFail();
+        $payload = [
+            'Product_detail' => 'Invalid timeline should not persist',
+            'company_id' => 1,
+            'product_value' => '100,000',
+            'Source_budget_id' => 1,
+            'fiscalyear' => 2026,
+            'Product_id' => 1,
+            'team_id' => 1,
+            'priority_id' => 1,
+            'contact_start_date' => '2026-02-01',
+            'date_of_closing_of_sale' => '2025-12-30',
+            'sales_can_be_close' => '2026-03-01',
+            'step' => [4 => '1'],
+            'step_date' => [4 => '2025-10-31'],
+        ];
+
+        $response = $this->actingAs($user)->post(route('user.sales.store'), $payload);
 
         $response->assertSessionHasErrors(['date_of_closing_of_sale', 'step_date.4']);
+
+        $this->actingAs($user)
+            ->from(route('user.sales.create'))
+            ->followingRedirects()
+            ->post(route('user.sales.store'), $payload)
+            ->assertOk()
+            ->assertSee('pf-error-list', false)
+            ->assertSee('is-invalid', false);
+
         $this->assertSame($before, DB::table('transactional')->count());
     }
 
