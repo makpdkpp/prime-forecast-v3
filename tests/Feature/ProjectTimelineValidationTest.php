@@ -108,6 +108,34 @@ class ProjectTimelineValidationTest extends TestCase
         $this->assertSame($before, DB::table('transactional')->count());
     }
 
+    public function test_team_admin_update_rejects_an_invalid_timeline(): void
+    {
+        $teamAdmin = User::query()->where('user_id', 2)->firstOrFail();
+        $before = DB::table('transactional')->where('transac_id', 1)->value('contact_start_date');
+        $payload = [
+            'Product_detail' => 'Invalid team admin timeline',
+            'company_id' => 1,
+            'product_value' => '100,000',
+            'Source_budget_id' => 1,
+            'fiscalyear' => 2026,
+            'Product_id' => 1,
+            'team_id' => 1,
+            'user_id' => 3,
+            'priority_id' => 1,
+            'contact_start_date' => '2026-02-01',
+            'date_of_closing_of_sale' => '2025-12-30',
+            'sales_can_be_close' => '2026-03-01',
+            'step' => [4 => '1'],
+            'step_date' => [4 => '2025-10-31'],
+        ];
+
+        $this->actingAs($teamAdmin)
+            ->put(route('teamadmin.sales.update', 1), $payload)
+            ->assertSessionHasErrors(['date_of_closing_of_sale', 'step_date.4']);
+
+        $this->assertSame($before, DB::table('transactional')->where('transac_id', 1)->value('contact_start_date'));
+    }
+
     private function validator(array $input)
     {
         $validator = Validator::make($input, [

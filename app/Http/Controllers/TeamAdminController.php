@@ -1303,7 +1303,7 @@ class TeamAdminController extends Controller
             ->findOrFail($id);
         
         // Validation
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'Product_detail' => 'required|max:255',
             'company_id' => 'required|integer|exists:company_catalog,company_id',
             'product_value' => 'required',
@@ -1319,6 +1319,8 @@ class TeamAdminController extends Controller
             'step_date' => 'nullable|array',
             'step_date.*' => 'nullable|date',
         ]);
+        ProjectTimelineValidator::attach($validator, $request->all());
+        $validator->validate();
 
         $targetTeamId = (int) $request->team_id;
         $targetUserId = (int) $request->user_id;
