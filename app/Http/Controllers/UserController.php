@@ -1070,7 +1070,9 @@ class UserController extends Controller
             ->selectRaw('SUM(CASE WHEN current_step.orderlv = 4 THEN t.product_value ELSE 0 END) as bidding_value')
             ->selectRaw('SUM(CASE WHEN current_step.orderlv = 5 THEN t.product_value ELSE 0 END) as win_value')
             ->selectRaw('SUM(CASE WHEN current_step.orderlv = 6 THEN t.product_value ELSE 0 END) as lost_value')
-            ->groupByRaw("DATE_FORMAT({$effectiveDate}, '%Y-%m')")
+            // Group by the selected alias for compatibility with MySQL
+            // ONLY_FULL_GROUP_BY on the shared host.
+            ->groupBy('month')
             ->orderBy('month')
             ->get();
     }
