@@ -35,10 +35,11 @@
 - [x] Laravel endpoint `/api/mcp/v1/health`
 - [x] Laravel Permission Guard และ Read Repository
 - [x] Laravel Audit Log endpoint และตาราง `mcp_audit_logs`
+- [x] Laravel MCP Feature Test ผ่าน 10 tests / 56 assertions บน SQLite แบบแยกอิสระ
 - [ ] End-to-end permission test บน Demo
 - [ ] Production OAuth และ Production deployment
 
-สถานะล่าสุดของ `https://mcp-demo.primes.co.th/readyz` คือ `not_ready` เนื่องจาก Laravel Gateway ยังไม่พร้อม และ `https://demo.primes.co.th/api/mcp/v1/health` ยังไม่มี route
+สถานะล่าสุดของ `https://mcp-demo.primes.co.th/readyz` คือ `not_ready` และ Laravel health ตอบ `503 mcp_disabled`; route ถูก Deploy แล้วแต่ยังไม่ได้เปิด `PRIME_MCP_ENABLED`
 
 ## 4. Permission Matrix ระยะที่ 1
 
@@ -66,8 +67,8 @@
 - [x] สร้าง `GET /api/mcp/v1/health` สำหรับตรวจ Laravel Gateway
 - [x] สร้าง `POST /api/mcp/v1/auth/context` สำหรับตรวจ Sanctum token และส่งคืน principal ที่จำเป็นต่อ MCP
 - [x] กำหนดให้ token ต้องมี ability `mcp:read`
-- [x] ปฏิเสธ token ที่หมดอายุ ถูก revoke ไม่มี ability หรือเป็นผู้ใช้ที่ไม่ active
-- [x] แปลง role ของระบบให้เป็น `sales`, `team_admin` หรือ `admin` ในจุดเดียว
+- [x] ปฏิเสธ token ที่หมดอายุ ไม่มีวันหมดอายุ ถูก revoke ไม่มี ability หรือเป็นผู้ใช้ที่ไม่ active
+- [x] แปลง role และ explicit permissions ของระบบในจุดเดียว
 - [x] โหลด team scope จาก `transactional_team` โดยไม่รับ team scope จาก request
 - [x] กำหนด error contract มาตรฐานสำหรับ `401`, `403`, `404`, `422`, `429` และ `503`
 - [x] เพิ่ม rate limiting สำหรับ MCP API แยกจาก API ปกติ
@@ -79,7 +80,7 @@
 | `GET /api/mcp/v1/health` | ใช่ | ไม่ | ไม่ | ไม่ |
 | `POST /api/mcp/v1/auth/context` | ใช่ | ใช่ | ใช่ | ตรวจ user status |
 | Forecast read endpoints | ใช่ | ใช่ | ใช่ | ใช่ |
-| `POST /api/mcp/v1/audit-events` | ใช่ | ใช่ | ใช่ | ตรวจ principal |
+| `POST /api/mcp/v1/audit-events` | ใช่ | ไม่ | ไม่ | ตรวจ actor กับข้อมูลผู้ใช้จริง |
 
 ### Phase B — Read-only Forecast API
 
@@ -90,7 +91,7 @@
 - [x] สร้าง `POST /api/mcp/v1/audit-events` สำหรับรับเหตุการณ์จาก MCP Server
 - [x] ใช้ Read Repository แยกจาก Dashboard เพื่อให้ scope และ field allowlist ชัดเจน
 - [x] กำหนด field allowlist ไม่ส่งข้อมูลส่วนบุคคลหรือ field ภายในที่ไม่จำเป็น
-- [x] ตรวจรูปแบบปี/ไตรมาส และจำกัด page size สูงสุด 100 รายการ
+- [x] ตรวจ `date_from` / `date_to` รูปแบบ `YYYY-MM-DD`, ปี/ไตรมาส และจำกัด page size สูงสุด 100 รายการ
 - [x] ป้องกัน N+1 queries ด้วย latest-step subquery และ query เดียวต่อ summary/page
 - [x] ยืนยันว่า endpoints ทั้งหมดใช้ HTTP methods แบบอ่านข้อมูล ยกเว้น audit endpoint ที่เขียนเฉพาะ Audit Log
 
@@ -190,8 +191,8 @@ PRIME_MCP_AUDIT_ENABLED=true
 ```dotenv
 NODE_ENV=production
 PORT=<plesk-assigned-port>
-LARAVEL_API_BASE_URL=https://demo.primes.co.th/api/mcp/v1
-LARAVEL_API_SERVICE_KEY=<same-demo-random-secret>
+LARAVEL_BASE_URL=https://demo.primes.co.th
+LARAVEL_MCP_SERVICE_TOKEN=<same-demo-random-secret>
 ALLOWED_HOSTS=mcp-demo.primes.co.th
 ```
 

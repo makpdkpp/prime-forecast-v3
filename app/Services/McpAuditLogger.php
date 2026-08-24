@@ -20,7 +20,7 @@ class McpAuditLogger
             }
 
             $requestId = (string) $request->attributes->get('mcp_request_id', '');
-            if (!Str::isUuid($requestId)) {
+            if (! Str::isUuid($requestId)) {
                 $requestId = (string) Str::uuid();
             }
 
@@ -29,10 +29,12 @@ class McpAuditLogger
                 'trace_id' => (string) ($request->header('X-Trace-Id') ?: ''),
                 'environment' => (string) app()->environment(),
                 'user_id' => $user?->user_id,
-                'role' => $user ? match ((int) $user->role_id) { 1 => 'admin', 2 => 'team_admin', 3 => 'sales', default => 'unknown' } : null,
+                'role' => $user ? match ((int) $user->role_id) {
+                    1 => 'admin', 2 => 'team_admin', 3 => 'sales', default => 'unknown'
+                } : null,
                 'token_id' => $token?->id,
                 'tool_name' => $request->header('X-MCP-Tool-Name'),
-                'endpoint' => '/' . ltrim($request->path(), '/'),
+                'endpoint' => '/'.ltrim($request->path(), '/'),
                 'arguments' => json_encode($this->safeArguments($request), JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR),
                 'scope' => json_encode($this->safeScope($request), JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR),
                 'decision' => $status >= 400 ? 'denied' : 'allowed',
@@ -52,7 +54,8 @@ class McpAuditLogger
     {
         $input = $request->except(['token', 'password', 'password_confirmation', 'authorization', 'api_key']);
         unset($input['X-Prime-MCP-Key']);
-        return $input;
+
+        return $this->redact($input);
     }
 
     private function safeScope(Request $request): array
@@ -65,16 +68,17 @@ class McpAuditLogger
 
     private function itemsReturned(?Response $response): ?int
     {
-        if (!$response || !str_contains((string) $response->headers->get('Content-Type'), 'json')) {
+        if (! $response || ! str_contains((string) $response->headers->get('Content-Type'), 'json')) {
             return null;
         }
         $payload = json_decode((string) $response->getContent(), true);
+
         return isset($payload['data']) && is_array($payload['data']) ? count($payload['data']) : null;
     }
 
     private function redact(mixed $value): mixed
     {
-        if (!is_array($value)) {
+        if (! is_array($value)) {
             return $value;
         }
 

@@ -7,9 +7,9 @@ use Illuminate\Support\Facades\DB;
 
 class McpForecastReadRepository
 {
-    public function paginate(array $scope, ?int $year, ?int $quarter, int $perPage): LengthAwarePaginator
+    public function paginate(array $scope, ?int $year, ?int $quarter, ?string $dateFrom, ?string $dateTo, int $perPage): LengthAwarePaginator
     {
-        $query = $this->baseQuery($scope, $year, $quarter)
+        $query = $this->baseQuery($scope, $year, $quarter, $dateFrom, $dateTo)
             ->select([
                 't.transac_id',
                 't.Product_detail',
@@ -29,9 +29,9 @@ class McpForecastReadRepository
         return $query->paginate($perPage);
     }
 
-    public function summary(array $scope, ?int $year, ?int $quarter): array
+    public function summary(array $scope, ?int $year, ?int $quarter, ?string $dateFrom, ?string $dateTo): array
     {
-        $query = $this->baseQuery($scope, $year, $quarter);
+        $query = $this->baseQuery($scope, $year, $quarter, $dateFrom, $dateTo);
 
         return [
             'project_count' => (clone $query)->count('t.transac_id'),
@@ -40,7 +40,7 @@ class McpForecastReadRepository
         ];
     }
 
-    private function baseQuery(array $scope, ?int $year, ?int $quarter)
+    private function baseQuery(array $scope, ?int $year, ?int $quarter, ?string $dateFrom, ?string $dateTo)
     {
         $latestIds = DB::table('transactional_step')
             ->select('transac_id', DB::raw('MAX(transacstep_id) as max_step_id'))
@@ -71,6 +71,14 @@ class McpForecastReadRepository
 
         if ($quarter !== null) {
             $query->whereRaw('QUARTER(COALESCE(latest_step.date, t.contact_start_date)) = ?', [$quarter]);
+        }
+
+        if ($dateFrom !== null) {
+            $query->whereDate(DB::raw('COALESCE(latest_step.date, t.contact_start_date)'), '>=', $dateFrom);
+        }
+
+        if ($dateTo !== null) {
+            $query->whereDate(DB::raw('COALESCE(latest_step.date, t.contact_start_date)'), '<=', $dateTo);
         }
 
         return $query;
