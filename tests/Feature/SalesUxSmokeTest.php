@@ -59,4 +59,21 @@ class SalesUxSmokeTest extends TestCase
             ->assertOk()
             ->assertJsonStructure(['draw', 'recordsTotal', 'recordsFiltered', 'data']);
     }
+
+    public function test_shared_sales_edit_form_posts_to_the_current_role_route(): void
+    {
+        $teamAdmin = User::query()->where('user_id', 2)->firstOrFail();
+        $admin = User::query()->where('user_id', 1)->firstOrFail();
+
+        $this->actingAs($teamAdmin)
+            ->get(route('teamadmin.sales.edit', 1))
+            ->assertOk()
+            ->assertSee(route('teamadmin.sales.update', 1), false)
+            ->assertDontSee('action="'.route('admin.sales.update', 1).'"', false);
+
+        $this->actingAs($admin)
+            ->get(route('admin.sales.edit', 1))
+            ->assertOk()
+            ->assertSee(route('admin.sales.update', 1), false);
+    }
 }

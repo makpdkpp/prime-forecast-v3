@@ -14,9 +14,20 @@
         </div>
     @endif
 
+    @if($errors->any())
+        <div class="alert alert-danger">
+            <strong>บันทึกไม่สำเร็จ กรุณาตรวจสอบข้อมูล</strong>
+            <ul class="mb-0 mt-2">
+                @foreach($errors->all() as $message)
+                    <li>{{ $message }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     <div class="card">
         <div class="card-body">
-            <form action="{{ route('admin.sales.update', $transaction->transac_id) }}" method="POST">
+            <form action="{{ request()->routeIs('teamadmin.*') ? route('teamadmin.sales.update', $transaction->transac_id) : route('admin.sales.update', $transaction->transac_id) }}" method="POST">
                 @csrf
                 @method('PUT')
                 
@@ -191,14 +202,21 @@
 
                 <div class="form-group">
                     <label>ขั้นตอนการขาย</label>
+                    @error('step')
+                        <div class="text-danger small mb-2">{{ $message }}</div>
+                    @enderror
                     <div class="row">
                         @foreach($steps as $step)
+                            @php($stepDateErrorKey = 'step_date.'.$step->level_id)
                             <div class="col-md-3">
                                 <div class="custom-control custom-checkbox">
                                     <input type="checkbox" class="custom-control-input step-checkbox" id="step_{{ $step->level_id }}" name="step[{{ $step->level_id }}]" value="1" {{ isset($transactionSteps[$step->level_id]) ? 'checked' : '' }}>
                                     <label class="custom-control-label" for="step_{{ $step->level_id }}">{{ $step->level }}</label>
                                 </div>
-                                <input type="text" name="step_date[{{ $step->level_id }}]" class="form-control form-control-sm mt-1 step-date flatpickr-step" id="step_date_{{ $step->level_id }}" value="{{ $transactionSteps[$step->level_id]->date ?? '' }}" {{ isset($transactionSteps[$step->level_id]) ? '' : 'disabled' }} readonly>
+                                <input type="text" name="step_date[{{ $step->level_id }}]" class="form-control form-control-sm mt-1 step-date flatpickr-step @error($stepDateErrorKey) is-invalid @enderror" id="step_date_{{ $step->level_id }}" value="{{ $transactionSteps[$step->level_id]->date ?? '' }}" {{ isset($transactionSteps[$step->level_id]) ? '' : 'disabled' }} readonly>
+                                @error($stepDateErrorKey)
+                                    <div class="text-danger small mt-1">{{ $message }}</div>
+                                @enderror
                             </div>
                         @endforeach
                     </div>
