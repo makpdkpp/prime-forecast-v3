@@ -20,9 +20,10 @@ class SecurityHeadersTest extends TestCase
         $response->assertHeader('Permissions-Policy');
     }
 
-    public function test_logout_cannot_be_triggered_with_get(): void
+    public function test_logout_get_redirects_to_login_after_signing_out(): void
     {
-        $this->get('/logout')->assertMethodNotAllowed();
+        $this->get('/logout')
+            ->assertRedirect('/login');
     }
 
     public function test_untrusted_host_is_rejected(): void
