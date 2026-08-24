@@ -108,6 +108,52 @@ class ProjectTimelineValidationTest extends TestCase
         $this->assertSame($before, DB::table('transactional')->count());
     }
 
+    public function test_sales_create_persists_dates_without_calendar_conversion(): void
+    {
+        $user = User::query()->where('user_id', 3)->firstOrFail();
+        $payload = [
+            'Product_detail' => 'Date persistence verification',
+            'company_id' => 1,
+            'product_value' => '100,000',
+            'Source_budget_id' => 1,
+            'fiscalyear' => 2026,
+            'Product_id' => 1,
+            'team_id' => 1,
+            'priority_id' => 1,
+            'contact_start_date' => '2026-02-01',
+            'date_of_closing_of_sale' => '2026-03-01',
+            'sales_can_be_close' => '2026-04-01',
+            'step' => [1 => '1', 4 => '1', 3 => '1', 5 => '1'],
+            'step_date' => [
+                1 => '2026-02-10',
+                4 => '2026-02-20',
+                3 => '2026-03-01',
+                5 => '2026-04-01',
+            ],
+        ];
+
+        $this->actingAs($user)
+            ->post(route('user.sales.store'), $payload)
+            ->assertRedirect();
+
+        $projectId = DB::table('transactional')
+            ->where('Product_detail', 'Date persistence verification')
+            ->value('transac_id');
+
+        $this->assertNotNull($projectId);
+        $this->assertDatabaseHas('transactional', [
+            'transac_id' => $projectId,
+            'contact_start_date' => '2026-02-01',
+            'date_of_closing_of_sale' => '2026-03-01',
+            'sales_can_be_close' => '2026-04-01',
+        ]);
+        $this->assertDatabaseHas('transactional_step', [
+            'transac_id' => $projectId,
+            'level_id' => 1,
+            'date' => '2026-02-10',
+        ]);
+    }
+
     public function test_team_admin_update_rejects_an_invalid_timeline(): void
     {
         $teamAdmin = User::query()->where('user_id', 2)->firstOrFail();
@@ -134,6 +180,43 @@ class ProjectTimelineValidationTest extends TestCase
             ->assertSessionHasErrors(['date_of_closing_of_sale', 'step_date.4']);
 
         $this->assertSame($before, DB::table('transactional')->where('transac_id', 1)->value('contact_start_date'));
+    }
+
+    public function test_team_admin_update_persists_dates_without_calendar_conversion(): void
+    {
+        $teamAdmin = User::query()->where('user_id', 2)->firstOrFail();
+        $payload = [
+            'Product_detail' => 'Team admin date persistence verification',
+            'company_id' => 1,
+            'product_value' => '100,000',
+            'Source_budget_id' => 1,
+            'fiscalyear' => 2026,
+            'Product_id' => 1,
+            'team_id' => 1,
+            'user_id' => 3,
+            'priority_id' => 1,
+            'contact_start_date' => '2026-02-01',
+            'date_of_closing_of_sale' => '2026-03-01',
+            'sales_can_be_close' => '2026-04-01',
+            'step' => [1 => '1', 4 => '1'],
+            'step_date' => [1 => '2026-02-10', 4 => '2026-02-20'],
+        ];
+
+        $this->actingAs($teamAdmin)
+            ->put(route('teamadmin.sales.update', 1), $payload)
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('transactional', [
+            'transac_id' => 1,
+            'contact_start_date' => '2026-02-01',
+            'date_of_closing_of_sale' => '2026-03-01',
+            'sales_can_be_close' => '2026-04-01',
+        ]);
+        $this->assertDatabaseHas('transactional_step', [
+            'transac_id' => 1,
+            'level_id' => 4,
+            'date' => '2026-02-20',
+        ]);
     }
 
     private function validator(array $input)
