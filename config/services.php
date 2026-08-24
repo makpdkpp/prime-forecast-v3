@@ -32,7 +32,11 @@ return [
     ],
 
     'prime_mcp' => [
+        'enabled' => env('PRIME_MCP_ENABLED', false),
         'demo_token_issuer_enabled' => env('PRIME_MCP_DEMO_TOKEN_ISSUER_ENABLED', false),
+        'service_key' => env('PRIME_MCP_SERVICE_KEY'),
+        'audit_enabled' => env('PRIME_MCP_AUDIT_ENABLED', true),
+        'max_page_size' => (int) env('PRIME_MCP_MAX_PAGE_SIZE', 100),
     ],
 
 ];
