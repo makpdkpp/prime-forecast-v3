@@ -76,6 +76,10 @@ class UserController extends Controller
                 $query->whereNotNull('t.date_of_closing_of_sale')
                     ->orWhereNotNull('t.sales_can_be_close');
             })
+            ->where(function ($query) {
+                $query->whereNull('current_step.orderlv')
+                    ->orWhere('current_step.orderlv', '<', 5);
+            })
             ->whereRaw('COALESCE(t.date_of_closing_of_sale, t.sales_can_be_close) >= DATE_SUB(CURDATE(), INTERVAL 14 DAY)')
             ->select([
                 't.transac_id',
@@ -83,6 +87,7 @@ class UserController extends Controller
                 't.product_value',
                 'c.company',
                 'current_step.level as step_level',
+                'current_step.orderlv as step_order',
                 DB::raw('COALESCE(t.date_of_closing_of_sale, t.sales_can_be_close) as due_date'),
             ])
             ->orderByRaw('CASE WHEN COALESCE(t.date_of_closing_of_sale, t.sales_can_be_close) < CURDATE() THEN 1 ELSE 0 END ASC')

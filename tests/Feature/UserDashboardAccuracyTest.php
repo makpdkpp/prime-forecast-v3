@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class UserDashboardAccuracyTest extends TestCase
@@ -83,6 +84,25 @@ class UserDashboardAccuracyTest extends TestCase
         $wins = $this->actingAs($user)->getJson(route('user.dashboard.winProjects', ['year' => 2026]));
         $wins->assertOk();
         $this->assertSame(750_000.0, collect($wins->json())->sum(fn ($row) => (float) $row['product_value']));
+    }
+
+    public function test_attention_list_excludes_projects_at_terminal_win_or_lost_steps(): void
+    {
+        DB::table('transactional')->where('transac_id', 1)->update([
+            'date_of_closing_of_sale' => now()->toDateString(),
+            'sales_can_be_close' => now()->toDateString(),
+        ]);
+        DB::table('transactional_step')->insert([
+            'transac_id' => 1,
+            'level_id' => 5,
+            'date' => now()->toDateString(),
+        ]);
+
+        $response = $this->dashboard(['year' => 2026]);
+        $attention = collect($response->viewData('attentionProjects'));
+
+        $this->assertFalse($attention->contains('transac_id', 1));
+        $this->assertTrue($attention->every(fn ($project) => (int) ($project->step_order ?? 0) < 5));
     }
 
     private function dashboard(array $params)
