@@ -31,4 +31,8 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'prime_mcp' => [
+        'demo_token_issuer_enabled' => env('PRIME_MCP_DEMO_TOKEN_ISSUER_ENABLED', false),
+    ],
+
 ];

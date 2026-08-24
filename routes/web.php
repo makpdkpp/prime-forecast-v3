@@ -6,6 +6,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\TeamAdminController;
 use App\Http\Controllers\RegistrationController;
+use App\Http\Controllers\McpDemoTokenController;
 
 /*
 |--------------------------------------------------------------------------
@@ -44,6 +45,15 @@ Route::post('/2fa/resend', [AuthController::class, 'resendTwoFactorCode'])->midd
 
 // Protected routes with auth middleware
 Route::middleware(['auth'])->group(function () {
+
+    // Demo-only MCP token management. The controller also requires 2FA to be enabled.
+    Route::get('/mcp-demo-token', [McpDemoTokenController::class, 'show'])
+        ->name('mcp-demo-token.show');
+    Route::post('/mcp-demo-token', [McpDemoTokenController::class, 'store'])
+        ->middleware('throttle:3,1')
+        ->name('mcp-demo-token.store');
+    Route::delete('/mcp-demo-token', [McpDemoTokenController::class, 'destroy'])
+        ->name('mcp-demo-token.destroy');
     
     // Admin routes (role_id = 1)
     Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function () {

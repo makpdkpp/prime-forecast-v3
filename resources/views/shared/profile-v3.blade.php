@@ -67,6 +67,13 @@
                         <div><b>รหัสผ่าน</b><small>ใช้หน้าลืมรหัสผ่านเพื่อกำหนดรหัสใหม่อย่างปลอดภัย</small></div>
                         <a href="{{ route('password.request') }}" class="pf-btn">เปลี่ยนรหัสผ่าน</a>
                     </div>
+                    @if(app()->environment('staging') && config('services.prime_mcp.demo_token_issuer_enabled'))
+                        <div class="pf-security-row">
+                            <span class="pf-security-icon"><i class="fas fa-robot"></i></span>
+                            <div><b>Prime Forecast MCP (Demo)</b><small>ออก Token อ่านข้อมูลสำหรับทดสอบผู้ช่วย AI อายุ 60 นาที</small></div>
+                            <a href="{{ route('mcp-demo-token.show') }}" class="pf-btn">จัดการ Token</a>
+                        </div>
+                    @endif
                 </article>
             </section>
         </div>
