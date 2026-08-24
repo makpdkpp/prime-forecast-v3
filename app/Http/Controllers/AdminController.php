@@ -44,7 +44,9 @@ class AdminController extends Controller
         $monthlyWins = (clone $base)
             ->where('current_step.orderlv', 5)
             ->selectRaw("DATE_FORMAT({$effectiveDate}, '%Y-%m') as sale_month, SUM(t.product_value) as monthly_value")
-            ->groupByRaw("DATE_FORMAT({$effectiveDate}, '%Y-%m')")
+            // Group by the selected alias so MySQL strict ONLY_FULL_GROUP_BY
+            // does not re-evaluate the COALESCE expression against the base table.
+            ->groupBy('sale_month')
             ->orderBy('sale_month')
             ->get();
 
@@ -77,14 +79,14 @@ class AdminController extends Controller
 
         $saleStatus = (clone $base)
             ->selectRaw("DATE_FORMAT({$effectiveDate}, '%Y-%m') as sale_month, COALESCE(current_step.orderlv, 0) as orderlv, COALESCE(current_step.level, 'ยังไม่ระบุสถานะ') as level, COUNT(*) as count")
-            ->groupByRaw("DATE_FORMAT({$effectiveDate}, '%Y-%m'), COALESCE(current_step.orderlv, 0), COALESCE(current_step.level, 'ยังไม่ระบุสถานะ')")
+            ->groupBy('sale_month', 'orderlv', 'level')
             ->orderBy('sale_month')
             ->orderBy('orderlv')
             ->get();
 
         $saleStatusValue = (clone $base)
             ->selectRaw("DATE_FORMAT({$effectiveDate}, '%Y-%m') as sale_month, COALESCE(current_step.orderlv, 0) as orderlv, COALESCE(current_step.level, 'ยังไม่ระบุสถานะ') as level, SUM(t.product_value) as total_value")
-            ->groupByRaw("DATE_FORMAT({$effectiveDate}, '%Y-%m'), COALESCE(current_step.orderlv, 0), COALESCE(current_step.level, 'ยังไม่ระบุสถานะ')")
+            ->groupBy('sale_month', 'orderlv', 'level')
             ->orderBy('sale_month')
             ->orderBy('orderlv')
             ->get();
