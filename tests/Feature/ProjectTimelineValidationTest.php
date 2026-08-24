@@ -219,6 +219,43 @@ class ProjectTimelineValidationTest extends TestCase
         ]);
     }
 
+    public function test_admin_update_persists_dates_without_calendar_conversion(): void
+    {
+        $admin = User::query()->where('user_id', 1)->firstOrFail();
+        $payload = [
+            'Product_detail' => 'Admin date persistence verification',
+            'company_id' => 1,
+            'product_value' => '100,000',
+            'Source_budget_id' => 1,
+            'fiscalyear' => 2026,
+            'Product_id' => 1,
+            'team_id' => 1,
+            'user_id' => 3,
+            'priority_id' => 1,
+            'contact_start_date' => '2026-02-01',
+            'date_of_closing_of_sale' => '2026-03-01',
+            'sales_can_be_close' => '2026-04-01',
+            'step' => [1 => '1', 4 => '1'],
+            'step_date' => [1 => '2026-02-10', 4 => '2026-02-20'],
+        ];
+
+        $this->actingAs($admin)
+            ->put(route('admin.sales.update', 1), $payload)
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('transactional', [
+            'transac_id' => 1,
+            'contact_start_date' => '2026-02-01',
+            'date_of_closing_of_sale' => '2026-03-01',
+            'sales_can_be_close' => '2026-04-01',
+        ]);
+        $this->assertDatabaseHas('transactional_step', [
+            'transac_id' => 1,
+            'level_id' => 4,
+            'date' => '2026-02-20',
+        ]);
+    }
+
     private function validator(array $input)
     {
         $validator = Validator::make($input, [
