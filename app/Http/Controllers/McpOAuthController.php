@@ -89,8 +89,10 @@ class McpOAuthController extends Controller
         abort_unless($client, 400, 'Unknown OAuth client.');
         $redirectUris = json_decode((string) $client->redirect_uris, true, 512, JSON_THROW_ON_ERROR);
         abort_unless(in_array($data['redirect_uri'], $redirectUris, true), 400, 'Redirect URI mismatch.');
-        abort_unless(($data['scope'] ?? self::SCOPE) === self::SCOPE, 400, 'Only mcp:read is supported.');
-        abort_unless(($data['resource'] ?? $this->resource()) === $this->resource(), 400, 'Resource mismatch.');
+        $requestedScopes = preg_split('/\s+/', trim((string) ($data['scope'] ?? self::SCOPE)), -1, PREG_SPLIT_NO_EMPTY);
+        abort_unless(in_array(self::SCOPE, $requestedScopes, true), 400, 'The mcp:read scope is required.');
+        $requestedResource = rtrim((string) ($data['resource'] ?? $this->resource()), '/');
+        abort_unless($requestedResource === $this->resource() || $requestedResource === $this->resource().'/mcp', 400, 'Resource mismatch.');
         if (! $request->user()) {
             $request->session()->put('mcp_oauth_return_to', $request->fullUrl());
 
