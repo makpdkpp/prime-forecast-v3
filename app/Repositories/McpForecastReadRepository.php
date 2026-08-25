@@ -19,6 +19,8 @@ class McpForecastReadRepository
                 't.team_id',
                 't.contact_start_date',
                 'company.company as company_name',
+                'sales.nname as sales_first_name',
+                'sales.surename as sales_last_name',
                 'current_step.orderlv as step_order',
                 'current_step.level as step_name',
                 'latest_step.date as step_date',
@@ -57,6 +59,7 @@ class McpForecastReadRepository
             ->leftJoinSub($latestSteps, 'latest_step', 'latest_step.transac_id', '=', 't.transac_id')
             ->leftJoin('step as current_step', 'current_step.level_id', '=', 'latest_step.level_id')
             ->leftJoin('company_catalog as company', 'company.company_id', '=', 't.company_id')
+            ->leftJoin('user as sales', 'sales.user_id', '=', 't.user_id')
             ->whereNull('t.deleted_at');
 
         if (($scope['type'] ?? null) === 'user') {

@@ -134,6 +134,8 @@ class McpGatewayTest extends TestCase
             ->assertOk()
             ->assertJsonCount(1, 'data')
             ->assertJsonPath('data.0.id', $includedId)
+            ->assertJsonPath('data.0.sales_id', (int) $sales->user_id)
+            ->assertJsonPath('data.0.sales_name', 'MCP Tester')
             ->assertJsonPath('summary.project_count', 1);
 
         $this->withMcpToken($token)
@@ -233,6 +235,8 @@ class McpGatewayTest extends TestCase
             'email' => uniqid('mcp-', true).'@example.test',
             'password' => 'test-password-hash',
             'role_id' => $roleId,
+            'nname' => 'MCP',
+            'surename' => 'Tester',
             'is_active' => true,
         ]);
         foreach ($teamIds as $teamId) {
@@ -262,6 +266,8 @@ class McpGatewayTest extends TestCase
             $table->string('email');
             $table->string('password');
             $table->unsignedInteger('role_id');
+            $table->string('nname');
+            $table->string('surename');
             $table->boolean('is_active')->default(true);
             $table->softDeletes();
         });

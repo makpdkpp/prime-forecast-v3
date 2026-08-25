@@ -93,6 +93,7 @@ class ForecastController extends Controller
             'value' => (float) $project->product_value,
             'fiscal_year' => $project->fiscalyear ? (int) $project->fiscalyear : null,
             'sales_id' => (int) $project->user_id,
+            'sales_name' => $this->salesName($project->sales_first_name, $project->sales_last_name),
             'team_id' => (int) $project->team_id,
             'step_order' => $project->step_order === null ? null : (int) $project->step_order,
             'step' => $project->step_name,
@@ -111,6 +112,16 @@ class ForecastController extends Controller
                 'role' => $principal->role,
             ],
         ]);
+    }
+
+    private function salesName(?string $firstName, ?string $lastName): ?string
+    {
+        $name = trim(implode(' ', array_filter([
+            trim((string) $firstName),
+            trim((string) $lastName),
+        ], static fn (string $part) => $part !== '')));
+
+        return $name === '' ? null : $name;
     }
 
     private function forbidden(): JsonResponse
