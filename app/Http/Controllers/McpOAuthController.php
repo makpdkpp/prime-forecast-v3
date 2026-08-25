@@ -126,11 +126,15 @@ class McpOAuthController extends Controller
         $validator = Validator::make($request->all(), [
             'code' => ['required', 'string'], 'client_id' => ['required', 'string', 'max:255'],
             'redirect_uri' => ['required', 'url', 'max:2048'], 'code_verifier' => ['required', 'string', 'max:128'],
+            'resource' => ['required', 'url', 'max:2048'],
         ]);
         if ($validator->fails()) {
             return response()->json(['error' => 'invalid_request', 'details' => $validator->errors()], 422);
         }
         $data = $validator->validated();
+        if ($this->normalizeResource($data['resource']) !== $this->resource()) {
+            return response()->json(['error' => 'invalid_target'], 400);
+        }
         $record = DB::table('mcp_oauth_authorization_codes')->where('code_hash', hash('sha256', $data['code']))->where('client_id', $data['client_id'])->first();
         if (! $record || $record->used_at || now()->greaterThan($record->expires_at) || $record->redirect_uri !== $data['redirect_uri']) {
             return response()->json(['error' => 'invalid_grant'], 400);
@@ -141,26 +145,36 @@ class McpOAuthController extends Controller
         }
         DB::table('mcp_oauth_authorization_codes')->where('code_hash', $record->code_hash)->update(['used_at' => now(), 'updated_at' => now()]);
 
-        return $this->issueTokens((int) $record->user_id, (string) $record->client_id, (string) $record->scope);
+        if ($this->normalizeResource((string) $record->resource) !== $this->resource()) {
+            return response()->json(['error' => 'invalid_grant'], 400);
+        }
+
+        return $this->issueTokens((int) $record->user_id, (string) $record->client_id, (string) $record->scope, $this->resource());
     }
 
     private function refreshToken(Request $request): JsonResponse
     {
-        $validator = Validator::make($request->all(), ['refresh_token' => ['required', 'string'], 'client_id' => ['required', 'string', 'max:255']]);
+        $validator = Validator::make($request->all(), [
+            'refresh_token' => ['required', 'string'], 'client_id' => ['required', 'string', 'max:255'],
+            'resource' => ['required', 'url', 'max:2048'],
+        ]);
         if ($validator->fails()) {
             return response()->json(['error' => 'invalid_request', 'details' => $validator->errors()], 422);
         }
         $data = $validator->validated();
+        if ($this->normalizeResource($data['resource']) !== $this->resource()) {
+            return response()->json(['error' => 'invalid_target'], 400);
+        }
         $record = DB::table('mcp_oauth_refresh_tokens')->where('token_hash', hash('sha256', $data['refresh_token']))->where('client_id', $data['client_id'])->whereNull('revoked_at')->first();
         if (! $record || now()->greaterThan($record->expires_at)) {
             return response()->json(['error' => 'invalid_grant'], 400);
         }
         DB::table('mcp_oauth_refresh_tokens')->where('token_hash', $record->token_hash)->update(['revoked_at' => now(), 'updated_at' => now()]);
 
-        return $this->issueTokens((int) $record->user_id, (string) $record->client_id, (string) $record->scope);
+        return $this->issueTokens((int) $record->user_id, (string) $record->client_id, (string) $record->scope, $this->resource());
     }
 
-    private function issueTokens(int $userId, string $clientId, string $scope): JsonResponse
+    private function issueTokens(int $userId, string $clientId, string $scope, string $resource): JsonResponse
     {
         $user = User::find($userId);
         if (! $user || ! $user->is_active) {
@@ -177,6 +191,7 @@ class McpOAuthController extends Controller
         return response()->json([
             'access_token' => $access->plainTextToken, 'token_type' => 'Bearer',
             'expires_in' => now()->diffInSeconds($expiresAt), 'refresh_token' => $refresh, 'scope' => $scope,
+            'resource' => $resource,
         ])->header('Cache-Control', 'no-store');
     }
 
@@ -196,6 +211,11 @@ class McpOAuthController extends Controller
     private function resource(): string
     {
         return rtrim((string) config('services.prime_mcp.oauth_resource'), '/');
+    }
+
+    private function normalizeResource(string $resource): string
+    {
+        return rtrim($resource, '/');
     }
 
     private function issuer(): string
