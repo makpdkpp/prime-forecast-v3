@@ -41,6 +41,7 @@ class McpOAuthMetadataTest extends TestCase
         $this->getJson('/.well-known/oauth-authorization-server')
             ->assertOk()
             ->assertJsonPath('issuer', 'https://demo.primes.co.th')
+            ->assertJsonPath('authorization_response_iss_parameter_supported', true)
             ->assertJsonPath('code_challenge_methods_supported.0', 'S256')
             ->assertJsonPath('scopes_supported.0', 'mcp:read');
     }

@@ -29,6 +29,7 @@ class McpOAuthController extends Controller
 
         return response()->json([
             'issuer' => $issuer,
+            'authorization_response_iss_parameter_supported' => true,
             'authorization_endpoint' => $issuer.'/oauth/authorize',
             'token_endpoint' => $issuer.'/oauth/token',
             'registration_endpoint' => $issuer.'/oauth/register',
@@ -107,7 +108,11 @@ class McpOAuthController extends Controller
             'created_at' => now(), 'updated_at' => now(),
         ]);
 
-        return redirect()->away($this->withQuery($data['redirect_uri'], ['code' => $plainCode, 'state' => $data['state'] ?? null]));
+        return redirect()->away($this->withQuery($data['redirect_uri'], [
+            'code' => $plainCode,
+            'state' => $data['state'] ?? null,
+            'iss' => $this->issuer(),
+        ]));
     }
 
     public function token(Request $request): JsonResponse
