@@ -85,17 +85,42 @@ class McpOAuthMetadataTest extends TestCase
             ->assertJsonPath('scopes_supported.0', 'mcp:read');
     }
 
-    public function test_dynamic_registration_allows_only_openai_redirect_hosts(): void
+    public function test_dynamic_registration_supports_chatgpt_and_codex_loopback_redirects(): void
     {
         $this->postJson('/oauth/register', [
             'client_name' => 'ChatGPT Demo',
             'redirect_uris' => ['https://chatgpt.com/connector/oauth/demo'],
         ])->assertCreated()->assertJsonPath('token_endpoint_auth_method', 'none');
 
-        $this->postJson('/oauth/register', [
+        $codexResponse = $this->postJson('/oauth/register', [
+            'client_name' => 'Codex Prime Forecast',
+            'redirect_uris' => ['http://127.0.0.1:49152/callback/prime-forecast-demo'],
+            'token_endpoint_auth_method' => 'none',
+            'grant_types' => ['authorization_code', 'refresh_token'],
+            'response_types' => ['code'],
+        ])->assertCreated()
+            ->assertHeader('Content-Type', 'application/json')
+            ->assertJsonPath('redirect_uris.0', 'http://127.0.0.1:49152/callback/prime-forecast-demo');
+
+        $this->assertLessThan(1048576, strlen($codexResponse->getContent()));
+
+        $rejectedResponse = $this->postJson('/oauth/register', [
             'client_name' => 'Untrusted',
             'redirect_uris' => ['https://evil.example/callback'],
-        ])->assertStatus(400);
+        ])->assertStatus(400)
+            ->assertHeader('Content-Type', 'application/json')
+            ->assertJsonPath('error', 'invalid_redirect_uri');
+
+        $this->assertLessThan(1048576, strlen($rejectedResponse->getContent()));
+    }
+
+    public function test_dynamic_registration_rejects_non_loopback_http_redirects(): void
+    {
+        $this->postJson('/oauth/register', [
+            'client_name' => 'Untrusted local-looking host',
+            'redirect_uris' => ['http://127.0.0.1.evil.example:49152/callback'],
+        ])->assertStatus(400)
+            ->assertJsonPath('error', 'invalid_redirect_uri');
     }
 
     public function test_token_response_uses_integer_expiry_and_no_store_headers(): void

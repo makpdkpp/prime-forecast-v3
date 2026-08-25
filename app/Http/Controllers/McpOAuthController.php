@@ -44,21 +44,31 @@ class McpOAuthController extends Controller
     {
         abort_unless((bool) config('services.prime_mcp.oauth_enabled'), 404);
         $validator = Validator::make($request->all(), [
-            'client_name' => ['required', 'string', 'max:150'],
+            'client_name' => ['sometimes', 'nullable', 'string', 'max:150'],
             'redirect_uris' => ['required', 'array', 'min:1', 'max:10'],
             'redirect_uris.*' => ['required', 'url', 'max:2048'],
         ]);
         if ($validator->fails()) {
-            return response()->json(['error' => 'invalid_client_metadata', 'details' => $validator->errors()], 422);
+            return response()->json([
+                'error' => 'invalid_client_metadata',
+                'error_description' => 'The OAuth client metadata is invalid.',
+                'details' => $validator->errors(),
+            ], 400);
         }
         $data = $validator->validated();
         foreach ($data['redirect_uris'] as $redirectUri) {
-            abort_unless($this->isAllowedRedirectUri($redirectUri), 400, 'Redirect URI is not allowed.');
+            if (! $this->isAllowedRedirectUri($redirectUri)) {
+                return response()->json([
+                    'error' => 'invalid_redirect_uri',
+                    'error_description' => 'The redirect URI is not allowed.',
+                ], 400);
+            }
         }
+        $clientName = trim((string) ($data['client_name'] ?? 'Codex MCP Client')) ?: 'Codex MCP Client';
         $clientId = 'mcp_'.Str::lower(Str::random(40));
         DB::table('mcp_oauth_clients')->insert([
             'client_id' => $clientId,
-            'client_name' => $data['client_name'],
+            'client_name' => $clientName,
             'redirect_uris' => json_encode(array_values($data['redirect_uris']), JSON_THROW_ON_ERROR),
             'created_at' => now(), 'updated_at' => now(),
         ]);
@@ -70,7 +80,10 @@ class McpOAuthController extends Controller
             'token_endpoint_auth_method' => 'none',
             'grant_types' => ['authorization_code', 'refresh_token'],
             'response_types' => ['code'],
-        ], 201);
+        ], 201)->withHeaders([
+            'Cache-Control' => 'no-store',
+            'Pragma' => 'no-cache',
+        ]);
     }
 
     public function authorizeRequest(Request $request): RedirectResponse
@@ -207,9 +220,27 @@ class McpOAuthController extends Controller
     private function isAllowedRedirectUri(string $uri): bool
     {
         $parts = parse_url($uri);
-        $host = strtolower((string) ($parts['host'] ?? ''));
+        if ($parts === false || isset($parts['fragment'], $parts['user']) || isset($parts['pass'])) {
+            return false;
+        }
 
-        return ($parts['scheme'] ?? '') === 'https' && ($host === 'chatgpt.com' || str_ends_with($host, '.chatgpt.com') || $host === 'openai.com' || str_ends_with($host, '.openai.com'));
+        $scheme = strtolower((string) ($parts['scheme'] ?? ''));
+        $host = strtolower(trim((string) ($parts['host'] ?? ''), '[]'));
+
+        if ($scheme === 'https') {
+            return $host === 'chatgpt.com'
+                || str_ends_with($host, '.chatgpt.com')
+                || $host === 'openai.com'
+                || str_ends_with($host, '.openai.com');
+        }
+
+        if ($scheme !== 'http' || ! in_array($host, ['127.0.0.1', '::1', 'localhost'], true)) {
+            return false;
+        }
+
+        $port = $parts['port'] ?? null;
+
+        return is_int($port) && $port >= 1 && $port <= 65535;
     }
 
     private function withQuery(string $uri, array $params): string
