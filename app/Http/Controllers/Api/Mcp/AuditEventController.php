@@ -20,9 +20,10 @@ class AuditEventController extends Controller
             'actor_role' => ['required', 'in:sales,team_admin,admin'],
             'team_ids' => ['present', 'array'],
             'team_ids.*' => ['integer', 'min:1'],
-            'tool' => ['required', 'in:get_my_forecast,list_team_forecasts,get_sales_forecast,get_company_forecast'],
+            'tool' => ['required', 'string', 'max:120'],
             'allowed' => ['required', 'boolean'],
             'outcome' => ['required', 'string', 'max:120'],
+            'http_status' => ['nullable', 'integer', 'between:100,599'],
             'argument_keys' => ['present', 'array'],
             'argument_keys.*' => ['string', 'max:120'],
             'duration_ms' => ['required', 'integer', 'min:0'],
@@ -47,7 +48,7 @@ class AuditEventController extends Controller
             ], 422);
         }
 
-        $httpStatus = match ($validated['outcome']) {
+        $httpStatus = $validated['http_status'] ?? match ($validated['outcome']) {
             'success' => 200,
             'permission_denied' => 403,
             default => 500,

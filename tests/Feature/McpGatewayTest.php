@@ -156,6 +156,7 @@ class McpGatewayTest extends TestCase
             'tool' => 'get_my_forecast',
             'allowed' => true,
             'outcome' => 'success',
+            'http_status' => 200,
             'argument_keys' => ['date_from', 'date_to'],
             'duration_ms' => 12,
         ])->assertStatus(202)->assertJsonPath('data.accepted', true);
@@ -165,6 +166,33 @@ class McpGatewayTest extends TestCase
             'user_id' => $sales->user_id,
             'tool_name' => 'get_my_forecast',
             'decision' => 'allowed',
+        ]);
+    }
+
+    public function test_node_audit_preserves_gateway_http_status_and_unknown_tool_name(): void
+    {
+        $sales = $this->createUser(3, [10]);
+
+        $this->withServiceKey()->postJson('/api/mcp/v1/audit-events', [
+            'request_id' => '22436954-78cb-4fd5-9c37-2ba543356598',
+            'occurred_at' => now()->toIso8601String(),
+            'phase' => 'read-only',
+            'actor_user_id' => $sales->user_id,
+            'actor_role' => 'sales',
+            'team_ids' => [10],
+            'tool' => 'attempted_unknown_tool',
+            'allowed' => false,
+            'outcome' => 'permission_denied',
+            'http_status' => 418,
+            'argument_keys' => [],
+            'duration_ms' => 1,
+        ])->assertStatus(202);
+
+        $this->assertDatabaseHas('mcp_audit_logs', [
+            'request_id' => '22436954-78cb-4fd5-9c37-2ba543356598',
+            'tool_name' => 'attempted_unknown_tool',
+            'decision' => 'denied',
+            'http_status' => 418,
         ]);
     }
 
