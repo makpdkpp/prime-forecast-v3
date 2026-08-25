@@ -7,6 +7,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
 class McpOAuthController extends Controller
@@ -41,11 +42,15 @@ class McpOAuthController extends Controller
     public function register(Request $request): JsonResponse
     {
         abort_unless((bool) config('services.prime_mcp.oauth_enabled'), 404);
-        $data = $request->validate([
+        $validator = Validator::make($request->all(), [
             'client_name' => ['required', 'string', 'max:150'],
             'redirect_uris' => ['required', 'array', 'min:1', 'max:10'],
             'redirect_uris.*' => ['required', 'url', 'max:2048'],
         ]);
+        if ($validator->fails()) {
+            return response()->json(['error' => 'invalid_client_metadata', 'details' => $validator->errors()], 422);
+        }
+        $data = $validator->validated();
         foreach ($data['redirect_uris'] as $redirectUri) {
             abort_unless($this->isAllowedRedirectUri($redirectUri), 400, 'Redirect URI is not allowed.');
         }
@@ -116,10 +121,14 @@ class McpOAuthController extends Controller
 
     private function authorizationCode(Request $request): JsonResponse
     {
-        $data = $request->validate([
+        $validator = Validator::make($request->all(), [
             'code' => ['required', 'string'], 'client_id' => ['required', 'string', 'max:255'],
             'redirect_uri' => ['required', 'url', 'max:2048'], 'code_verifier' => ['required', 'string', 'max:128'],
         ]);
+        if ($validator->fails()) {
+            return response()->json(['error' => 'invalid_request', 'details' => $validator->errors()], 422);
+        }
+        $data = $validator->validated();
         $record = DB::table('mcp_oauth_authorization_codes')->where('code_hash', hash('sha256', $data['code']))->where('client_id', $data['client_id'])->first();
         if (! $record || $record->used_at || now()->greaterThan($record->expires_at) || $record->redirect_uri !== $data['redirect_uri']) {
             return response()->json(['error' => 'invalid_grant'], 400);
@@ -135,7 +144,11 @@ class McpOAuthController extends Controller
 
     private function refreshToken(Request $request): JsonResponse
     {
-        $data = $request->validate(['refresh_token' => ['required', 'string'], 'client_id' => ['required', 'string', 'max:255']]);
+        $validator = Validator::make($request->all(), ['refresh_token' => ['required', 'string'], 'client_id' => ['required', 'string', 'max:255']]);
+        if ($validator->fails()) {
+            return response()->json(['error' => 'invalid_request', 'details' => $validator->errors()], 422);
+        }
+        $data = $validator->validated();
         $record = DB::table('mcp_oauth_refresh_tokens')->where('token_hash', hash('sha256', $data['refresh_token']))->where('client_id', $data['client_id'])->whereNull('revoked_at')->first();
         if (! $record || now()->greaterThan($record->expires_at)) {
             return response()->json(['error' => 'invalid_grant'], 400);
