@@ -30,17 +30,18 @@
 - [x] Unit/integration test ของ MCP ผ่าน 17 รายการ
 - [x] Deploy MCP Demo และตรวจสอบ `/healthz` สำเร็จ
 - [x] เพิ่มหน้าออก Sanctum demo token บน branch `codex/mcp-demo-token`
-- [ ] Review และ merge หน้าออก demo token เข้าสู่ branch ที่ใช้ Deploy Demo
+- [x] Review และ merge หน้าออก demo token เข้าสู่ branch ที่ใช้ Deploy Demo
 - [x] Laravel API Gateway สำหรับ MCP (Phase A–C foundation)
 - [x] Laravel endpoint `/api/mcp/v1/health`
 - [x] Laravel Permission Guard และ Read Repository
 - [x] Laravel Audit Log endpoint และตาราง `mcp_audit_logs`
 - [x] Laravel MCP Feature Test ผ่าน 11 tests / 58 assertions บน SQLite แบบแยกอิสระ
 - [x] End-to-end Permission Matrix ผ่านบน Demo วันที่ 2026-08-25
-- [ ] Deploy Audit/response hardening revision และทำ smoke test ซ้ำ
+- [x] Deploy Audit/response hardening revision และทำ smoke test ซ้ำ
+- [ ] Deploy OAuth 2.1 bridge และทดสอบ ChatGPT Developer mode บน Demo
 - [ ] Production OAuth และ Production deployment
 
-สถานะล่าสุดของ `https://mcp-demo.primes.co.th/readyz` คือ `not_ready` และ Laravel health ตอบ `503 mcp_disabled`; route ถูก Deploy แล้วแต่ยังไม่ได้เปิด `PRIME_MCP_ENABLED`
+สถานะล่าสุดที่ผู้ใช้ยืนยันของ `https://mcp-demo.primes.co.th/readyz` คือ `ready` และ Admin `get_company_forecast` ตอบโครงสร้าง `items/summary/meta` สำเร็จบน Demo
 
 ## 4. Permission Matrix ระยะที่ 1
 
@@ -185,6 +186,9 @@ PRIME_MCP_ENABLED=true
 PRIME_MCP_DEMO_TOKEN_ISSUER_ENABLED=true
 PRIME_MCP_SERVICE_KEY=<demo-random-secret>
 PRIME_MCP_AUDIT_ENABLED=true
+PRIME_MCP_OAUTH_ENABLED=true
+PRIME_MCP_OAUTH_RESOURCE=https://mcp-demo.primes.co.th
+PRIME_MCP_OAUTH_ISSUER=https://demo.primes.co.th
 ```
 
 ### MCP Demo

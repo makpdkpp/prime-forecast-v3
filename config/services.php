@@ -36,6 +36,9 @@ return [
         'demo_token_issuer_enabled' => env('PRIME_MCP_DEMO_TOKEN_ISSUER_ENABLED', false),
         'service_key' => env('PRIME_MCP_SERVICE_KEY'),
         'audit_enabled' => env('PRIME_MCP_AUDIT_ENABLED', true),
+        'oauth_enabled' => env('PRIME_MCP_OAUTH_ENABLED', false),
+        'oauth_resource' => env('PRIME_MCP_OAUTH_RESOURCE', 'https://mcp-demo.primes.co.th'),
+        'oauth_issuer' => env('PRIME_MCP_OAUTH_ISSUER', env('APP_URL', 'http://localhost')),
         'max_page_size' => (int) env('PRIME_MCP_MAX_PAGE_SIZE', 100),
     ],
 

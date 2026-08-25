@@ -1,12 +1,24 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AuthController;
+use App\Http\Controllers\Admin\CompanyController;
+use App\Http\Controllers\Admin\CompanyRequestController;
+use App\Http\Controllers\Admin\IndustryController;
+use App\Http\Controllers\Admin\MigrationController;
+use App\Http\Controllers\Admin\PositionController;
+use App\Http\Controllers\Admin\PriorityController;
+use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\SourceController;
+use App\Http\Controllers\Admin\StepController;
+use App\Http\Controllers\Admin\TeamController;
+use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\AdminController;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\TeamAdminController;
-use App\Http\Controllers\RegistrationController;
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\McpDemoTokenController;
+use App\Http\Controllers\McpOAuthController;
+use App\Http\Controllers\RegistrationController;
+use App\Http\Controllers\TeamAdminController;
+use App\Http\Controllers\UserController;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -34,6 +46,12 @@ Route::get('/post-login-loading', [AuthController::class, 'postLoginLoading'])->
 Route::get('/logout', [AuthController::class, 'logout']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+Route::get('/.well-known/oauth-protected-resource', [McpOAuthController::class, 'protectedResource'])->name('mcp.oauth.protected-resource');
+Route::get('/.well-known/oauth-authorization-server', [McpOAuthController::class, 'authorizationServer'])->name('mcp.oauth.authorization-server');
+Route::post('/oauth/register', [McpOAuthController::class, 'register'])->middleware('throttle:10,1')->name('mcp.oauth.register');
+Route::get('/oauth/authorize', [McpOAuthController::class, 'authorizeRequest'])->middleware('throttle:30,1')->name('mcp.oauth.authorize');
+Route::post('/oauth/token', [McpOAuthController::class, 'token'])->middleware('throttle:60,1')->name('mcp.oauth.token');
+
 // Registration routes (user invitation)
 Route::get('/register/{token}', [RegistrationController::class, 'showRegistrationForm'])->name('register');
 Route::post('/register/{token}', [RegistrationController::class, 'register'])->name('register.submit');
@@ -54,7 +72,7 @@ Route::middleware(['auth'])->group(function () {
         ->name('mcp-demo-token.store');
     Route::delete('/mcp-demo-token', [McpDemoTokenController::class, 'destroy'])
         ->name('mcp-demo-token.destroy');
-    
+
     // Admin routes (role_id = 1)
     Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function () {
         Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
@@ -71,25 +89,25 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/profile', [AdminController::class, 'profile'])->name('profile');
         Route::put('/profile', [AdminController::class, 'updateProfile'])->name('profile.update');
         Route::post('/profile/toggle-2fa', [AdminController::class, 'toggleTwoFactor'])->name('profile.toggle-2fa');
-        
+
         // Company Request Management
-        Route::get('/company-requests', [\App\Http\Controllers\Admin\CompanyRequestController::class, 'index'])->name('company-requests.index');
-        Route::post('/company-requests/{id}/approve', [\App\Http\Controllers\Admin\CompanyRequestController::class, 'approve'])->name('company-requests.approve');
-        Route::post('/company-requests/{id}/reject', [\App\Http\Controllers\Admin\CompanyRequestController::class, 'reject'])->name('company-requests.reject');
-        Route::delete('/company-requests/{id}', [\App\Http\Controllers\Admin\CompanyRequestController::class, 'destroy'])->name('company-requests.destroy');
-        
+        Route::get('/company-requests', [CompanyRequestController::class, 'index'])->name('company-requests.index');
+        Route::post('/company-requests/{id}/approve', [CompanyRequestController::class, 'approve'])->name('company-requests.approve');
+        Route::post('/company-requests/{id}/reject', [CompanyRequestController::class, 'reject'])->name('company-requests.reject');
+        Route::delete('/company-requests/{id}', [CompanyRequestController::class, 'destroy'])->name('company-requests.destroy');
+
         // Master Data Management
-        Route::resource('companies', \App\Http\Controllers\Admin\CompanyController::class);
-        Route::resource('products', \App\Http\Controllers\Admin\ProductController::class);
-        Route::resource('industries', \App\Http\Controllers\Admin\IndustryController::class);
-        Route::resource('sources', \App\Http\Controllers\Admin\SourceController::class);
-        Route::resource('steps', \App\Http\Controllers\Admin\StepController::class);
-        Route::resource('priorities', \App\Http\Controllers\Admin\PriorityController::class);
-        Route::resource('teams', \App\Http\Controllers\Admin\TeamController::class);
-        Route::resource('positions', \App\Http\Controllers\Admin\PositionController::class);
-        Route::resource('users', \App\Http\Controllers\Admin\UserManagementController::class);
-        Route::patch('/users/{user}/toggle-status', [\App\Http\Controllers\Admin\UserManagementController::class, 'toggleStatus'])->name('users.toggle-status');
-        
+        Route::resource('companies', CompanyController::class);
+        Route::resource('products', ProductController::class);
+        Route::resource('industries', IndustryController::class);
+        Route::resource('sources', SourceController::class);
+        Route::resource('steps', StepController::class);
+        Route::resource('priorities', PriorityController::class);
+        Route::resource('teams', TeamController::class);
+        Route::resource('positions', PositionController::class);
+        Route::resource('users', UserManagementController::class);
+        Route::patch('/users/{user}/toggle-status', [UserManagementController::class, 'toggleStatus'])->name('users.toggle-status');
+
         // Reports
         Route::get('/reports', [AdminController::class, 'reportsIndex'])->name('reports.index');
         Route::get('/reports/bidding', [AdminController::class, 'reportBidding'])->name('reports.bidding');
@@ -98,19 +116,19 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/reports/contract/data', [AdminController::class, 'reportContractData'])->name('reports.contract.data');
         Route::get('/reports/windate', [AdminController::class, 'reportWindate'])->name('reports.windate');
         Route::post('/reports/windate/data', [AdminController::class, 'reportWindateData'])->name('reports.windate.data');
-        
+
         // Migration management is deliberately absent from production routes.
-        if (!app()->isProduction()) {
-            Route::get('/migration', [\App\Http\Controllers\Admin\MigrationController::class, 'index'])->name('migration.index');
-            Route::get('/migration/status', [\App\Http\Controllers\Admin\MigrationController::class, 'status'])->name('migration.status');
-            Route::post('/migration/run', [\App\Http\Controllers\Admin\MigrationController::class, 'run'])->name('migration.run');
-            Route::post('/migration/run-single/{migration}', [\App\Http\Controllers\Admin\MigrationController::class, 'runSingle'])->name('migration.run-single');
-            Route::post('/migration/rollback', [\App\Http\Controllers\Admin\MigrationController::class, 'rollback'])->name('migration.rollback');
-            Route::get('/migration/schema', [\App\Http\Controllers\Admin\MigrationController::class, 'schema'])->name('migration.schema');
-            Route::get('/migration/logs', [\App\Http\Controllers\Admin\MigrationController::class, 'logs'])->name('migration.logs');
+        if (! app()->isProduction()) {
+            Route::get('/migration', [MigrationController::class, 'index'])->name('migration.index');
+            Route::get('/migration/status', [MigrationController::class, 'status'])->name('migration.status');
+            Route::post('/migration/run', [MigrationController::class, 'run'])->name('migration.run');
+            Route::post('/migration/run-single/{migration}', [MigrationController::class, 'runSingle'])->name('migration.run-single');
+            Route::post('/migration/rollback', [MigrationController::class, 'rollback'])->name('migration.rollback');
+            Route::get('/migration/schema', [MigrationController::class, 'schema'])->name('migration.schema');
+            Route::get('/migration/logs', [MigrationController::class, 'logs'])->name('migration.logs');
         }
     });
-    
+
     // Team Admin routes (role_id = 2)
     Route::middleware(['teamadmin'])->prefix('teamadmin')->name('teamadmin.')->group(function () {
         Route::get('/dashboard', [TeamAdminController::class, 'dashboard'])->name('dashboard');
@@ -131,7 +149,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/reports/windate', [TeamAdminController::class, 'reportWindate'])->name('reports.windate');
         Route::post('/reports/windate/data', [TeamAdminController::class, 'reportWindateData'])->name('reports.windate.data');
     });
-    
+
     // User routes (role_id = 3)
     Route::middleware(['user'])->prefix('user')->name('user.')->group(function () {
         Route::get('/dashboard', [UserController::class, 'dashboard'])->name('dashboard');

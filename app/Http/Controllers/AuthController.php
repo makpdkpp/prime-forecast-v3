@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
 use App\Mail\PasswordResetLink;
 use App\Mail\TwoFactorCode;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -55,7 +55,7 @@ class AuthController extends Controller
             ->where('token_expiry', '>', now())
             ->first();
 
-        if (!$user) {
+        if (! $user) {
             return redirect()->route('password.request')->with('error', 'ลิงก์รีเซ็ตรหัสผ่านไม่ถูกต้องหรือหมดอายุ');
         }
 
@@ -75,7 +75,7 @@ class AuthController extends Controller
             ->where('token_expiry', '>', now())
             ->first();
 
-        if (!$user) {
+        if (! $user) {
             return redirect()->route('password.request')->with('error', 'ลิงก์รีเซ็ตรหัสผ่านไม่ถูกต้องหรือหมดอายุ');
         }
 
@@ -97,12 +97,12 @@ class AuthController extends Controller
 
         $user = User::query()->where('email', $data['email'])->first();
 
-        if (!$user) {
+        if (! $user) {
             return back()->withErrors(['email' => 'อีเมลหรือรหัสผ่านไม่ถูกต้อง'])->onlyInput('email');
         }
 
         // Check if user is active
-        if (!$user->is_active) {
+        if (! $user->is_active) {
             return back()->withErrors(['email' => 'บัญชีของคุณถูกระงับการใช้งาน กรุณาติดต่อผู้ดูแลระบบ'])->onlyInput('email');
         }
 
@@ -120,7 +120,7 @@ class AuthController extends Controller
             $usingLegacyMd5 = $valid;
         }
 
-        if (!$valid) {
+        if (! $valid) {
             return back()->withErrors(['email' => 'อีเมลหรือรหัสผ่านไม่ถูกต้อง'])->onlyInput('email');
         }
 
@@ -135,16 +135,17 @@ class AuthController extends Controller
             if ($user->two_factor_code && $user->two_factor_expires_at && now()->isBefore($user->two_factor_expires_at)) {
                 // OTP still valid, don't send new one
                 $request->session()->put('2fa_user_id', $user->user_id);
+
                 return redirect()->route('2fa.verify')->with('success', 'รหัส OTP ถูกส่งไปยัง email ของคุณแล้ว');
             }
-            
+
             // Generate OTP and send email
             $code = $user->generateTwoFactorCode();
             Mail::to($user->email)->send(new TwoFactorCode($user, $code));
-            
+
             // Store user_id in session (not logged in yet)
             $request->session()->put('2fa_user_id', $user->user_id);
-            
+
             return redirect()->route('2fa.verify')->with('success', 'รหัส OTP ถูกส่งไปยัง email ของคุณแล้ว');
         }
 
@@ -152,7 +153,7 @@ class AuthController extends Controller
         Auth::login($user);
         $request->session()->regenerate();
 
-        return redirect()->route('postlogin.loading');
+        return redirect($request->session()->pull('mcp_oauth_return_to', route('postlogin.loading')));
     }
 
     public function logout(Request $request)
@@ -167,18 +168,19 @@ class AuthController extends Controller
 
     public function showTwoFactorVerify(Request $request)
     {
-        if (!$request->session()->has('2fa_user_id')) {
+        if (! $request->session()->has('2fa_user_id')) {
             return redirect()->route('login');
         }
-        
+
         $userId = $request->session()->get('2fa_user_id');
         $user = User::find($userId);
-        
-        if (!$user) {
+
+        if (! $user) {
             $request->session()->forget('2fa_user_id');
+
             return redirect()->route('login')->with('error', 'Session หมดอายุ กรุณา login ใหม่');
         }
-        
+
         return view('auth.two-factor-verify', compact('user'));
     }
 
@@ -187,38 +189,39 @@ class AuthController extends Controller
         $request->validate([
             'code' => 'required|string|size:6',
         ]);
-        
-        if (!$request->session()->has('2fa_user_id')) {
+
+        if (! $request->session()->has('2fa_user_id')) {
             return redirect()->route('login')->with('error', 'Session หมดอายุ กรุณา login ใหม่');
         }
-        
+
         $userId = $request->session()->get('2fa_user_id');
         $user = User::find($userId);
-        
-        if (!$user) {
+
+        if (! $user) {
             $request->session()->forget('2fa_user_id');
+
             return redirect()->route('login')->with('error', 'Session หมดอายุ กรุณา login ใหม่');
         }
-        
-        if (!$user->verifyTwoFactorCode($request->code)) {
+
+        if (! $user->verifyTwoFactorCode($request->code)) {
             return back()->withErrors(['code' => 'รหัส OTP ไม่ถูกต้องหรือหมดอายุ']);
         }
-        
+
         // OTP correct - clear code and login
         $user->resetTwoFactorCode();
         $request->session()->forget('2fa_user_id');
-        
+
         Auth::login($user);
         $request->session()->regenerate();
 
-        return redirect()->route('postlogin.loading');
+        return redirect($request->session()->pull('mcp_oauth_return_to', route('postlogin.loading')));
     }
 
     public function postLoginLoading(Request $request)
     {
         $user = Auth::user();
 
-        if (!$user) {
+        if (! $user) {
             return redirect()->route('login');
         }
 
@@ -234,28 +237,29 @@ class AuthController extends Controller
 
     public function resendTwoFactorCode(Request $request)
     {
-        if (!$request->session()->has('2fa_user_id')) {
+        if (! $request->session()->has('2fa_user_id')) {
             return redirect()->route('login');
         }
-        
+
         $userId = $request->session()->get('2fa_user_id');
         $user = User::find($userId);
-        
-        if (!$user) {
+
+        if (! $user) {
             $request->session()->forget('2fa_user_id');
+
             return redirect()->route('login')->with('error', 'Session หมดอายุ กรุณา login ใหม่');
         }
-        
+
         // A code expires after five minutes. Allow a resend after the first minute.
         $resendAvailableAt = $user->two_factor_expires_at?->copy()->subMinutes(4);
         if ($resendAvailableAt && now()->isBefore($resendAvailableAt)) {
             return back()->with('error', 'กรุณารอสักครู่ก่อนขอรหัส OTP ใหม่');
         }
-        
+
         // Generate new OTP and send email
         $code = $user->generateTwoFactorCode();
         Mail::to($user->email)->send(new TwoFactorCode($user, $code));
-        
+
         return back()->with('success', 'ส่งรหัส OTP ใหม่ไปยัง email ของคุณแล้ว');
     }
 }
