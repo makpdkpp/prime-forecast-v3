@@ -23,6 +23,45 @@ class McpOAuthMetadataTest extends TestCase
             $table->json('redirect_uris');
             $table->timestamps();
         });
+        Schema::create('mcp_oauth_authorization_codes', function (Blueprint $table) {
+            $table->string('code_hash', 64)->primary();
+            $table->string('client_id', 255);
+            $table->unsignedBigInteger('user_id');
+            $table->string('redirect_uri', 2048);
+            $table->string('code_challenge', 128);
+            $table->string('scope', 255);
+            $table->string('resource', 2048)->nullable();
+            $table->timestamp('expires_at');
+            $table->timestamp('used_at')->nullable();
+            $table->timestamps();
+        });
+        Schema::create('mcp_oauth_refresh_tokens', function (Blueprint $table) {
+            $table->string('token_hash', 64)->primary();
+            $table->string('client_id', 255);
+            $table->unsignedBigInteger('user_id');
+            $table->string('scope', 255);
+            $table->timestamp('expires_at');
+            $table->timestamp('revoked_at')->nullable();
+            $table->timestamps();
+        });
+        Schema::create('user', function (Blueprint $table) {
+            $table->increments('user_id');
+            $table->string('email');
+            $table->string('password');
+            $table->unsignedInteger('role_id');
+            $table->boolean('is_active')->default(true);
+            $table->softDeletes();
+        });
+        Schema::create('personal_access_tokens', function (Blueprint $table) {
+            $table->id();
+            $table->morphs('tokenable');
+            $table->string('name');
+            $table->string('token', 64)->unique();
+            $table->text('abilities')->nullable();
+            $table->timestamp('last_used_at')->nullable();
+            $table->timestamp('expires_at')->nullable();
+            $table->timestamps();
+        });
         config()->set('services.prime_mcp.oauth_enabled', true);
         config()->set('services.prime_mcp.oauth_resource', 'https://mcp-demo.primes.co.th');
         config()->set('services.prime_mcp.oauth_issuer', 'https://demo.primes.co.th');
@@ -57,5 +96,46 @@ class McpOAuthMetadataTest extends TestCase
             'client_name' => 'Untrusted',
             'redirect_uris' => ['https://evil.example/callback'],
         ])->assertStatus(400);
+    }
+
+    public function test_token_response_uses_integer_expiry_and_no_store_headers(): void
+    {
+        $userId = DB::table('user')->insertGetId([
+            'email' => 'oauth-user@example.test',
+            'password' => 'unused-test-hash',
+            'role_id' => 3,
+            'is_active' => true,
+        ]);
+        $verifier = str_repeat('v', 64);
+        $challenge = rtrim(strtr(base64_encode(hash('sha256', $verifier, true)), '+/', '-_'), '=');
+        $plainCode = 'oauth-test-code';
+        DB::table('mcp_oauth_authorization_codes')->insert([
+            'code_hash' => hash('sha256', $plainCode),
+            'client_id' => 'mcp_test_client',
+            'user_id' => $userId,
+            'redirect_uri' => 'https://chatgpt.com/connector_platform_oauth_redirect',
+            'code_challenge' => $challenge,
+            'scope' => 'mcp:read',
+            'resource' => 'https://mcp-demo.primes.co.th',
+            'expires_at' => now()->addMinutes(5),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $response = $this->post('/oauth/token', [
+            'grant_type' => 'authorization_code',
+            'code' => $plainCode,
+            'client_id' => 'mcp_test_client',
+            'redirect_uri' => 'https://chatgpt.com/connector_platform_oauth_redirect',
+            'code_verifier' => $verifier,
+            'resource' => 'https://mcp-demo.primes.co.th',
+        ]);
+
+        $response->assertOk()
+            ->assertJsonPath('resource', 'https://mcp-demo.primes.co.th')
+            ->assertHeader('Cache-Control', 'no-store, private')
+            ->assertHeader('Pragma', 'no-cache');
+        $this->assertIsInt($response->json('expires_in'));
+        $this->assertGreaterThan(0, $response->json('expires_in'));
     }
 }

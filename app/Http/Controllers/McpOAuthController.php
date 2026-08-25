@@ -186,6 +186,7 @@ class McpOAuthController extends Controller
             return response()->json(['error' => 'invalid_grant'], 400);
         }
         $expiresAt = now()->addHour();
+        $expiresIn = max(1, (int) now()->diffInSeconds($expiresAt));
         $access = $user->createToken('prime-forecast-chatgpt', [$scope], $expiresAt);
         $refresh = Str::random(96);
         DB::table('mcp_oauth_refresh_tokens')->insert([
@@ -195,9 +196,12 @@ class McpOAuthController extends Controller
 
         return response()->json([
             'access_token' => $access->plainTextToken, 'token_type' => 'Bearer',
-            'expires_in' => now()->diffInSeconds($expiresAt), 'refresh_token' => $refresh, 'scope' => $scope,
+            'expires_in' => $expiresIn, 'refresh_token' => $refresh, 'scope' => $scope,
             'resource' => $resource,
-        ])->header('Cache-Control', 'no-store');
+        ])->withHeaders([
+            'Cache-Control' => 'no-store',
+            'Pragma' => 'no-cache',
+        ]);
     }
 
     private function isAllowedRedirectUri(string $uri): bool
