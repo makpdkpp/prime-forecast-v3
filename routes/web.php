@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\SourceController;
 use App\Http\Controllers\Admin\StepController;
 use App\Http\Controllers\Admin\TeamController;
 use App\Http\Controllers\Admin\UserManagementController;
+use App\Http\Controllers\Admin\McpAuditLogController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\McpDemoTokenController;
@@ -89,6 +90,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/profile', [AdminController::class, 'profile'])->name('profile');
         Route::put('/profile', [AdminController::class, 'updateProfile'])->name('profile.update');
         Route::post('/profile/toggle-2fa', [AdminController::class, 'toggleTwoFactor'])->name('profile.toggle-2fa');
+        Route::get('/mcp-audit-logs', [McpAuditLogController::class, 'index'])->name('mcp-audit-logs.index');
+        Route::get('/mcp-audit-logs/export', [McpAuditLogController::class, 'export'])->name('mcp-audit-logs.export');
 
         // Company Request Management
         Route::get('/company-requests', [CompanyRequestController::class, 'index'])->name('company-requests.index');

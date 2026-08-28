@@ -411,6 +411,12 @@ return [
                 ],
             ],
         ],
+        [
+            'text' => 'MCP Audit Logs',
+            'url' => 'admin/mcp-audit-logs',
+            'icon' => 'fas fa-robot',
+            'can' => 'admin',
+        ],
         
         // Team Admin Menu (role_id = 2)
         [

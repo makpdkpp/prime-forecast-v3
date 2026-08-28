@@ -216,6 +216,41 @@ class McpGatewayTest extends TestCase
         ]);
     }
 
+    public function test_only_admin_can_view_mcp_audit_logs(): void
+    {
+        $admin = $this->createUser(1);
+        $sales = $this->createUser(3, [10]);
+        DB::table('mcp_audit_logs')->insert([
+            'request_id' => '0b5738f4-a396-43db-86b3-3bffef30b437',
+            'trace_id' => null,
+            'environment' => 'testing',
+            'user_id' => $sales->user_id,
+            'role' => 'sales',
+            'token_id' => null,
+            'tool_name' => 'get_my_forecast',
+            'endpoint' => '/mcp/tools/get_my_forecast',
+            'arguments' => json_encode(['keys' => ['date_from']]),
+            'scope' => json_encode(['team_ids' => [10]]),
+            'decision' => 'allowed',
+            'http_status' => 200,
+            'duration_ms' => 10,
+            'items_returned' => 1,
+            'ip_address' => '127.0.0.1',
+            'user_agent' => 'MCP test client',
+            'created_at' => now(),
+        ]);
+
+        $this->actingAs($admin)
+            ->get('/admin/mcp-audit-logs')
+            ->assertOk()
+            ->assertSee('MCP Demo Test & Audit Logs', false)
+            ->assertSee('get_my_forecast');
+
+        $this->actingAs($sales)
+            ->get('/admin/mcp-audit-logs')
+            ->assertRedirect('/user/dashboard');
+    }
+
     private function withServiceKey(): static
     {
         return $this->withHeaders(['X-Prime-MCP-Key' => 'demo-service-key-for-tests']);

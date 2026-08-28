@@ -35,7 +35,8 @@
 - [x] Laravel endpoint `/api/mcp/v1/health`
 - [x] Laravel Permission Guard และ Read Repository
 - [x] Laravel Audit Log endpoint และตาราง `mcp_audit_logs`
-- [x] Laravel MCP Feature Test ผ่าน 11 tests / 58 assertions บน SQLite แบบแยกอิสระ
+- [x] Laravel MCP Feature Test ผ่าน 12 tests / 65 assertions บน SQLite แบบแยกอิสระ
+- [x] เพิ่มหน้า Admin ดู/กรอง Audit Log และ Export JSON แบบไม่ส่ง token, service key, IP หรือ cookie
 - [x] End-to-end Permission Matrix ผ่านบน Demo วันที่ 2026-08-25
 - [x] Deploy Audit/response hardening revision และทำ smoke test ซ้ำ
 - [ ] Deploy OAuth 2.1 bridge และทดสอบ ChatGPT Developer mode บน Demo
@@ -118,14 +119,14 @@ Audit record ขั้นต่ำที่บันทึก:
 ### Phase D — Automated Tests
 
 - [ ] Unit test สำหรับ role mapping และ permission policy
-- [ ] Feature test สำหรับทุก Laravel MCP endpoint
-- [ ] ทดสอบด้วยผู้ใช้อย่างน้อย 4 บัญชี: Admin, Team Admin ทีม A, Sales ทีม A และ Sales ทีม B
+- [x] Feature test สำหรับ Laravel MCP health, auth context, forecast และ audit endpoints
+- [x] ทดสอบด้วยผู้ใช้อย่างน้อย 4 บัญชี: Admin, Team Admin ทีม A, Sales ทีม A และ Sales ทีม B
 - [ ] ทดสอบ token ที่ไม่มี, ผิด, หมดอายุ, ถูก revoke และไม่มี `mcp:read`
-- [ ] ทดสอบ service key ที่ไม่มีหรือไม่ถูกต้อง
-- [ ] ทดสอบ Sales อ่านข้อมูลของ Sales คนอื่นไม่ได้
-- [ ] ทดสอบ Team Admin ข้ามทีมไม่ได้
-- [ ] ทดสอบ Team Admin ระบุ `teamId` หรือ `salesId` ปลอมแล้วต้องถูกปฏิเสธ
-- [ ] ทดสอบ Admin อ่านภาพรวมบริษัทได้
+- [x] ทดสอบ service key ที่ไม่มีหรือไม่ถูกต้อง
+- [x] ทดสอบ Sales อ่านข้อมูลของ Sales คนอื่นไม่ได้
+- [x] ทดสอบ Team Admin ข้ามทีมไม่ได้
+- [x] ทดสอบ Team Admin ระบุ `teamId` หรือ `salesId` ปลอมแล้วต้องถูกปฏิเสธ
+- [x] ทดสอบ Admin อ่านภาพรวมบริษัทได้
 - [ ] ทดสอบ inactive user ถูกปฏิเสธ
 - [ ] ทดสอบทุก allowed และ denied request มี Audit Log
 - [ ] เปรียบเทียบยอดจาก API กับ Dashboard เดิมในช่วงวันเดียวกัน
