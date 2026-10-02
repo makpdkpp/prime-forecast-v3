@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Services\McpSalesCreateAccess;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,7 +20,7 @@ class McpOAuthController extends Controller
         return response()->json([
             'resource' => $this->resource(),
             'authorization_servers' => [$this->issuer()],
-            'scopes_supported' => [self::SCOPE],
+            'scopes_supported' => $this->supportedScopes(),
         ]);
     }
 
@@ -36,7 +37,7 @@ class McpOAuthController extends Controller
             'client_id_metadata_document_supported' => false,
             'token_endpoint_auth_methods_supported' => ['none'],
             'code_challenge_methods_supported' => ['S256'],
-            'scopes_supported' => [self::SCOPE],
+            'scopes_supported' => $this->supportedScopes(),
         ]);
     }
 
@@ -86,7 +87,7 @@ class McpOAuthController extends Controller
         ]);
     }
 
-    public function authorizeRequest(Request $request): RedirectResponse
+    public function authorizeRequest(Request $request)
     {
         abort_unless((bool) config('services.prime_mcp.oauth_enabled'), 404);
         $data = $request->validate([
@@ -105,6 +106,7 @@ class McpOAuthController extends Controller
         abort_unless(in_array($data['redirect_uri'], $redirectUris, true), 400, 'Redirect URI mismatch.');
         $requestedScopes = preg_split('/\s+/', trim((string) ($data['scope'] ?? self::SCOPE)), -1, PREG_SPLIT_NO_EMPTY);
         abort_unless(in_array(self::SCOPE, $requestedScopes, true), 400, 'The mcp:read scope is required.');
+        abort_if(array_diff($requestedScopes, $this->supportedScopes()), 400, 'Unsupported scope.');
         $requestedResource = rtrim((string) ($data['resource'] ?? $this->resource()), '/');
         abort_unless($requestedResource === $this->resource() || $requestedResource === $this->resource().'/mcp', 400, 'Resource mismatch.');
         if (! $request->user()) {
@@ -112,11 +114,37 @@ class McpOAuthController extends Controller
 
             return redirect()->route('login');
         }
+        $data['scope'] = implode(' ', array_unique($requestedScopes));
+        if (in_array(McpSalesCreateAccess::ABILITY, $requestedScopes, true)) {
+            abort_unless(app(McpSalesCreateAccess::class)->eligible($request->user()), 403, 'This account is not a sales-create tester.');
+            $nonce = Str::random(48);
+            $request->session()->put('mcp_write_consent', ['nonce' => $nonce, 'data' => $data, 'user_id' => $request->user()->user_id, 'expires_at' => now()->addMinutes(10)->timestamp]);
+
+            return response()->view('mcp.write-consent', ['nonce' => $nonce, 'clientName' => $client->client_name])->header('Cache-Control', 'no-store');
+        }
+
+        return $this->issueCode($request, $data);
+    }
+
+    public function approveWrite(Request $request)
+    {
+        $request->validate(['nonce' => ['required', 'string'], 'confirm' => ['required', 'accepted']]);
+        $pending = $request->session()->get('mcp_write_consent');
+        abort_unless($pending && hash_equals($pending['nonce'], $request->string('nonce')->toString())
+            && $pending['user_id'] === $request->user()->user_id && $pending['expires_at'] > now()->timestamp, 403);
+        abort_unless((bool) config('services.prime_mcp.oauth_enabled') && app(McpSalesCreateAccess::class)->eligible($request->user()), 403);
+        $request->session()->forget('mcp_write_consent');
+
+        return $this->issueCode($request, $pending['data']);
+    }
+
+    private function issueCode(Request $request, array $data): RedirectResponse
+    {
         $plainCode = Str::random(96);
         DB::table('mcp_oauth_authorization_codes')->insert([
             'code_hash' => hash('sha256', $plainCode), 'client_id' => $data['client_id'],
             'user_id' => $request->user()->getAuthIdentifier(), 'redirect_uri' => $data['redirect_uri'],
-            'code_challenge' => $data['code_challenge'], 'scope' => self::SCOPE,
+            'code_challenge' => $data['code_challenge'], 'scope' => $data['scope'],
             'resource' => $this->resource(), 'expires_at' => now()->addMinutes(5),
             'created_at' => now(), 'updated_at' => now(),
         ]);
@@ -161,7 +189,9 @@ class McpOAuthController extends Controller
         if (! hash_equals((string) $record->code_challenge, $expected)) {
             return response()->json(['error' => 'invalid_grant'], 400);
         }
-        DB::table('mcp_oauth_authorization_codes')->where('code_hash', $record->code_hash)->update(['used_at' => now(), 'updated_at' => now()]);
+        if (! DB::table('mcp_oauth_authorization_codes')->where('code_hash', $record->code_hash)->whereNull('used_at')->update(['used_at' => now(), 'updated_at' => now()])) {
+            return response()->json(['error' => 'invalid_grant'], 400);
+        }
 
         if ($this->normalizeResource((string) $record->resource) !== $this->resource()) {
             return response()->json(['error' => 'invalid_grant'], 400);
@@ -187,7 +217,9 @@ class McpOAuthController extends Controller
         if (! $record || now()->greaterThan($record->expires_at)) {
             return response()->json(['error' => 'invalid_grant'], 400);
         }
-        DB::table('mcp_oauth_refresh_tokens')->where('token_hash', $record->token_hash)->update(['revoked_at' => now(), 'updated_at' => now()]);
+        if (! DB::table('mcp_oauth_refresh_tokens')->where('token_hash', $record->token_hash)->whereNull('revoked_at')->update(['revoked_at' => now(), 'updated_at' => now()])) {
+            return response()->json(['error' => 'invalid_grant'], 400);
+        }
 
         return $this->issueTokens((int) $record->user_id, (string) $record->client_id, (string) $record->scope, $this->resource());
     }
@@ -198,9 +230,13 @@ class McpOAuthController extends Controller
         if (! $user || ! $user->is_active) {
             return response()->json(['error' => 'invalid_grant'], 400);
         }
+        $abilities = preg_split('/\s+/', trim($scope), -1, PREG_SPLIT_NO_EMPTY);
+        if (array_diff($abilities, $this->supportedScopes()) || (in_array(McpSalesCreateAccess::ABILITY, $abilities, true) && ! app(McpSalesCreateAccess::class)->eligible($user))) {
+            return response()->json(['error' => 'invalid_grant'], 400);
+        }
         $expiresAt = now()->addHour();
         $expiresIn = max(1, (int) now()->diffInSeconds($expiresAt));
-        $access = $user->createToken('prime-forecast-chatgpt', [$scope], $expiresAt);
+        $access = $user->createToken('prime-forecast-chatgpt', $abilities, $expiresAt);
         $refresh = Str::random(96);
         DB::table('mcp_oauth_refresh_tokens')->insert([
             'token_hash' => hash('sha256', $refresh), 'client_id' => $clientId, 'user_id' => $userId,
@@ -220,7 +256,7 @@ class McpOAuthController extends Controller
     private function isAllowedRedirectUri(string $uri): bool
     {
         $parts = parse_url($uri);
-        if ($parts === false || isset($parts['fragment'], $parts['user']) || isset($parts['pass'])) {
+        if ($parts === false || isset($parts['fragment']) || isset($parts['user']) || isset($parts['pass'])) {
             return false;
         }
 
@@ -251,6 +287,11 @@ class McpOAuthController extends Controller
     private function resource(): string
     {
         return rtrim((string) config('services.prime_mcp.oauth_resource'), '/');
+    }
+
+    private function supportedScopes(): array
+    {
+        return app(McpSalesCreateAccess::class)->enabled() ? [self::SCOPE, McpSalesCreateAccess::ABILITY] : [self::SCOPE];
     }
 
     private function normalizeResource(string $resource): string

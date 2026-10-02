@@ -52,6 +52,9 @@ class McpAuditLogger
 
     private function safeArguments(Request $request): array
     {
+        if ($request->is('api/mcp/v1/sales-drafts*')) {
+            return ['keys' => array_keys($request->all())];
+        }
         $input = $request->except(['token', 'password', 'password_confirmation', 'authorization', 'api_key']);
         unset($input['X-Prime-MCP-Key']);
 

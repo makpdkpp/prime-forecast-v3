@@ -53,6 +53,11 @@ class McpPrincipalResolver
             ->values()
             ->all();
 
+        $createAccess = app(McpSalesCreateAccess::class);
+        if ($createAccess->eligible($user) && $createAccess->tokenAllowed($token)) {
+            $permissions[] = McpSalesCreateAccess::PERMISSION;
+        }
+
         return new McpPrincipal(
             (int) $user->user_id,
             $role,

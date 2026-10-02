@@ -31,6 +31,9 @@
 
                     <form method="POST" action="{{ route('mcp-demo-token.store') }}" class="d-inline">
                         @csrf
+                        @if($canCreateSales)
+                            <label class="d-block"><input type="checkbox" name="sales_create" value="1"> เพิ่มสิทธิ์สร้างร่างโครงการของฉัน (ต้องยืนยันบนเว็บก่อนบันทึก)</label>
+                        @endif
                         <button type="submit" class="btn btn-primary"><i class="fas fa-plus-circle mr-1"></i>ออก Token ใหม่</button>
                     </form>
                     @if($hasToken)

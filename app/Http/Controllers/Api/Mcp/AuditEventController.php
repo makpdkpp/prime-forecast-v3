@@ -15,7 +15,7 @@ class AuditEventController extends Controller
         $validator = Validator::make($request->all(), [
             'request_id' => ['required', 'uuid'],
             'occurred_at' => ['required', 'date'],
-            'phase' => ['required', 'in:read-only'],
+            'phase' => ['required', 'in:read-only,sales-create'],
             'actor_user_id' => ['required', 'integer', 'exists:user,user_id'],
             'actor_role' => ['required', 'in:sales,team_admin,admin'],
             'team_ids' => ['present', 'array'],

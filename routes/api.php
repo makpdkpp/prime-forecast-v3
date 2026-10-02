@@ -34,5 +34,8 @@ Route::prefix('mcp/v1')
             Route::get('/teams/{teamId}/forecasts', [ForecastController::class, 'team'])->name('api.mcp.forecast.team');
             Route::get('/sales/{salesId}/forecast', [ForecastController::class, 'sales'])->name('api.mcp.forecast.sales');
             Route::get('/forecast/company', [ForecastController::class, 'company'])->name('api.mcp.forecast.company');
+            Route::get('/sales-create/options', [\App\Http\Controllers\Api\Mcp\SalesDraftController::class, 'options']);
+            Route::post('/sales-drafts', [\App\Http\Controllers\Api\Mcp\SalesDraftController::class, 'store']);
+            Route::get('/sales-drafts/{draftId}', [\App\Http\Controllers\Api\Mcp\SalesDraftController::class, 'show']);
         });
     });

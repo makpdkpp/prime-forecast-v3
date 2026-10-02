@@ -15,6 +15,7 @@ class McpDemoTokenController extends Controller
         $this->ensureDemoEnabled($request);
 
         return view('mcp.demo-token', [
+            'canCreateSales' => app(\App\Services\McpSalesCreateAccess::class)->eligible($request->user()),
             'hasToken' => $request->user()->tokens()->where('name', self::TOKEN_NAME)->exists(),
         ]);
     }
@@ -25,6 +26,11 @@ class McpDemoTokenController extends Controller
 
         $user = $request->user();
         abort_unless($user->hasTwoFactorEnabled(), 403, 'ต้องเปิดใช้งาน 2FA ก่อนออก Demo MCP Token');
+        $abilities = [self::TOKEN_ABILITY];
+        if ($request->boolean('sales_create')) {
+            abort_unless(app(\App\Services\McpSalesCreateAccess::class)->eligible($user), 403);
+            $abilities[] = \App\Services\McpSalesCreateAccess::ABILITY;
+        }
 
         // A user can have only one active demo token. Never log or persist the
         // plain-text value; Sanctum stores only its hash in personal_access_tokens.
@@ -33,7 +39,7 @@ class McpDemoTokenController extends Controller
         $expiresAt = now()->addMinutes(self::TOKEN_TTL_MINUTES);
         $token = $user->createToken(
             self::TOKEN_NAME,
-            [self::TOKEN_ABILITY],
+            $abilities,
             $expiresAt,
         );
 

@@ -2,9 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Models\User;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Laravel\Sanctum\PersonalAccessToken;
 use Tests\TestCase;
 
 class McpOAuthMetadataTest extends TestCase
@@ -162,5 +164,39 @@ class McpOAuthMetadataTest extends TestCase
             ->assertHeader('Pragma', 'no-cache');
         $this->assertIsInt($response->json('expires_in'));
         $this->assertGreaterThan(0, $response->json('expires_in'));
+    }
+
+    public function test_sales_create_oauth_requires_browser_consent_and_issues_separate_abilities(): void
+    {
+        config()->set('services.prime_mcp.enabled', true);
+        config()->set('services.prime_mcp.audit_enabled', true);
+        config()->set('services.prime_mcp.sales_create_enabled', true);
+        $id = DB::table('user')->insertGetId(['email' => 'writer@example.test', 'password' => 'unused', 'role_id' => 3, 'is_active' => true]);
+        config()->set('services.prime_mcp.sales_create_user_ids', [$id]);
+        $user = User::findOrFail($id);
+        $redirect = 'http://127.0.0.1:5555/callback/test';
+        DB::table('mcp_oauth_clients')->insert(['client_id' => 'writer', 'client_name' => 'Codex', 'redirect_uris' => json_encode([$redirect])]);
+        $verifier = str_repeat('v', 64);
+        $query = [
+            'client_id' => 'writer', 'redirect_uri' => $redirect, 'response_type' => 'code',
+            'code_challenge' => rtrim(strtr(base64_encode(hash('sha256', $verifier, true)), '+/', '-_'), '='),
+            'code_challenge_method' => 'S256', 'scope' => 'mcp:read mcp:sales:create',
+            'resource' => 'https://mcp-demo.primes.co.th', 'state' => 'test-state',
+        ];
+        $this->actingAs($user, 'web')->get('/oauth/authorize?'.http_build_query($query))->assertOk()->assertSee('อนุญาตและเชื่อมต่อ');
+        $this->assertDatabaseCount('mcp_oauth_authorization_codes', 0);
+        $this->postJson('/oauth/write-consent', ['nonce' => 'wrong', 'confirm' => 1])->assertForbidden();
+        $nonce = session('mcp_write_consent.nonce');
+        $response = $this->post('/oauth/write-consent', ['nonce' => $nonce, 'confirm' => 1])->assertRedirect();
+        parse_str(parse_url($response->headers->get('Location'), PHP_URL_QUERY), $callback);
+        $this->assertSame('https://demo.primes.co.th', $callback['iss']);
+        $this->postJson('/oauth/write-consent', ['nonce' => $nonce, 'confirm' => 1])->assertForbidden();
+        $body = ['grant_type' => 'authorization_code', 'code' => $callback['code'], 'client_id' => 'writer', 'redirect_uri' => $redirect, 'code_verifier' => $verifier, 'resource' => $query['resource']];
+        $token = $this->postJson('/oauth/token', $body)->assertOk()->assertJsonPath('scope', 'mcp:read mcp:sales:create')->json('access_token');
+        $stored = PersonalAccessToken::findToken($token);
+        $this->assertSame(['mcp:read', 'mcp:sales:create'], $stored->abilities);
+        $this->postJson('/oauth/token', $body)->assertStatus(400)->assertJsonPath('error', 'invalid_grant');
+        config()->set('services.prime_mcp.sales_create_user_ids', []);
+        $this->actingAs($user, 'web')->get('/oauth/authorize?'.http_build_query($query))->assertForbidden();
     }
 }

@@ -64,6 +64,9 @@ Route::post('/2fa/resend', [AuthController::class, 'resendTwoFactorCode'])->midd
 
 // Protected routes with auth middleware
 Route::middleware(['auth'])->group(function () {
+    Route::post('/oauth/write-consent', [McpOAuthController::class, 'approveWrite'])->middleware(['auth:web', 'throttle:10,1'])->name('mcp.oauth.write-consent');
+    Route::get('/mcp/sales-drafts/{draftId}', [\App\Http\Controllers\McpSalesConfirmationController::class, 'show'])->middleware('auth:web')->name('mcp.sales-drafts.show');
+    Route::post('/mcp/sales-drafts/{draftId}', [\App\Http\Controllers\McpSalesConfirmationController::class, 'store'])->middleware(['auth:web', 'throttle:10,1'])->name('mcp.sales-drafts.store');
 
     // Demo-only MCP token management. The controller also requires 2FA to be enabled.
     Route::get('/mcp-demo-token', [McpDemoTokenController::class, 'show'])
