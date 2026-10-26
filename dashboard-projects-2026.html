@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Prime Forecast — Dashboard โครงการ 2026</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --surface: #ffffff;
+      --surface-2: #f8fafc;
+      --text: #162033;
+      --muted: #667085;
+      --border: #e4e9f1;
+      --navy: #102a56;
+      --blue: #2f6fed;
+      --blue-soft: #eaf1ff;
+      --green: #15956d;
+      --green-soft: #e7f7f1;
+      --amber: #c77b13;
+      --amber-soft: #fff4df;
+      --purple: #7656d6;
+      --gray: #7a8495;
+      --shadow: 0 10px 30px rgba(16, 42, 86, .08);
+      --radius: 18px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--text);
+      background: var(--bg);
+      font-family: "Noto Sans Thai", "Leelawadee UI", Tahoma, sans-serif;
+    }
+    button, input, select { font: inherit; }
+    .shell { min-height: 100vh; }
+    header {
+      background: linear-gradient(120deg, #0c2348, #174a86);
+      color: #fff;
+      padding: 30px clamp(18px, 4vw, 56px) 72px;
+    }
+    .header-inner, main { width: min(1440px, 100%); margin: 0 auto; }
+    .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; }
+    .brand-mark {
+      width: 38px; height: 38px; border-radius: 11px;
+      display: grid; place-items: center; font-weight: 800;
+      background: linear-gradient(145deg, #66a3ff, #8d74f0);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.3);
+    }
+    .brand span { font-size: 14px; opacity: .75; display: block; }
+    .brand strong { font-size: 17px; }
+    .headline { display: flex; justify-content: space-between; gap: 28px; align-items: end; }
+    h1 { font-size: clamp(27px, 4vw, 42px); line-height: 1.15; margin: 0 0 8px; font-weight: 700; }
+    .subtitle { margin: 0; color: rgba(255,255,255,.72); }
+    .freshness { text-align: right; color: rgba(255,255,255,.7); font-size: 13px; white-space: nowrap; }
+    main { padding: 0 clamp(18px, 4vw, 56px) 54px; margin-top: -42px; }
+    .kpis { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 16px; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
+    .kpi { padding: 20px 22px; min-height: 132px; display: flex; flex-direction: column; justify-content: space-between; }
+    .kpi-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .kpi-label { color: var(--muted); font-size: 13px; }
+    .icon { width: 36px; height: 36px; border-radius: 11px; display: grid; place-items: center; background: var(--blue-soft); color: var(--blue); }
+    .icon svg { width: 19px; height: 19px; }
+    .kpi-value { margin-top: 12px; font-size: clamp(24px, 3vw, 32px); font-weight: 700; letter-spacing: -.5px; }
+    .kpi-note { color: var(--muted); font-size: 12px; margin-top: 4px; }
+    .kpi.win .icon { background: var(--green-soft); color: var(--green); }
+    .kpi.rate .icon { background: var(--amber-soft); color: var(--amber); }
+    .grid { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(300px, .75fr); gap: 18px; margin-top: 18px; }
+    .panel { padding: 22px; }
+    .panel-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; margin-bottom: 22px; }
+    h2 { font-size: 18px; margin: 0 0 4px; }
+    .panel-head p { margin: 0; color: var(--muted); font-size: 12px; }
+    .bar-list { display: grid; gap: 17px; }
+    .bar-row { display: grid; grid-template-columns: minmax(125px, 190px) 1fr minmax(84px, auto); gap: 14px; align-items: center; }
+    .bar-name { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .track { height: 10px; border-radius: 99px; background: #edf1f6; overflow: hidden; }
+    .bar { height: 100%; border-radius: inherit; background: var(--blue); min-width: 3px; }
+    .bar-value { text-align: right; font-size: 13px; font-variant-numeric: tabular-nums; }
+    .bar-row.win .bar { background: var(--green); }
+    .bar-row.empty .bar { background: var(--gray); }
+    .donut-wrap { display: grid; place-items: center; padding-top: 2px; }
+    .donut { width: min(230px, 76%); aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; background: conic-gradient(var(--green) 0 18.12%, #e9edf4 18.12% 100%); }
+    .donut::before { content: ""; width: 68%; height: 68%; border-radius: 50%; background: var(--surface); grid-area: 1/1; }
+    .donut-label { grid-area: 1/1; z-index: 1; text-align: center; }
+    .donut-label strong { display: block; font-size: 28px; }
+    .donut-label span { color: var(--muted); font-size: 12px; }
+    .legend { display: flex; justify-content: center; gap: 20px; margin-top: 18px; font-size: 12px; color: var(--muted); }
+    .dot { width: 9px; height: 9px; display: inline-block; border-radius: 50%; margin-right: 6px; }
+    .dot.green { background: var(--green); } .dot.gray { background: #e9edf4; border: 1px solid #d6dce6; }
+    .table-card { margin-top: 18px; overflow: hidden; }
+    .table-toolbar { padding: 20px 22px 16px; display: flex; align-items: end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    .toolbar-title p { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
+    .filters { display: flex; gap: 10px; flex-wrap: wrap; }
+    .field { position: relative; }
+    .field svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 17px; color: var(--muted); }
+    input, select { border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 10px; padding: 10px 12px; outline: none; }
+    input { width: min(280px, 70vw); padding-left: 38px; }
+    input:focus, select:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(47,111,237,.12); }
+    .table-scroll { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 900px; }
+    th, td { text-align: left; padding: 14px 16px; border-top: 1px solid var(--border); vertical-align: middle; }
+    th { background: var(--surface-2); color: var(--muted); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .3px; }
+    td { font-size: 13px; }
+    td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+    .project { min-width: 270px; max-width: 410px; }
+    .project strong { display: block; font-size: 13px; font-weight: 600; }
+    .project span { display: block; color: var(--muted); margin-top: 4px; font-size: 12px; }
+    .stage { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; border-radius: 999px; padding: 5px 9px; background: var(--blue-soft); color: #255bc0; font-size: 11px; }
+    .stage::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+    .stage.win { background: var(--green-soft); color: #087954; }
+    .stage.pending { background: #f0f2f5; color: #6d7583; }
+    .stage.bid { background: var(--amber-soft); color: #9e620f; }
+    .empty-state { display: none; padding: 38px; text-align: center; color: var(--muted); }
+    .footer-row { display: flex; justify-content: space-between; gap: 12px; padding: 13px 20px; border-top: 1px solid var(--border); color: var(--muted); font-size: 12px; }
+    @media (max-width: 980px) { .kpis { grid-template-columns: repeat(2, 1fr); } .grid { grid-template-columns: 1fr; } }
+    @media (max-width: 620px) {
+      header { padding-bottom: 68px; }
+      .headline { align-items: flex-start; flex-direction: column; }
+      .freshness { text-align: left; }
+      .kpis { grid-template-columns: 1fr; }
+      .bar-row { grid-template-columns: 112px 1fr; }
+      .bar-value { grid-column: 2; margin-top: -9px; }
+      .filters, .field, input, select { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <div class="header-inner">
+        <div class="brand"><div class="brand-mark">P</div><div><strong>Prime Forecast</strong><span>Sales intelligence dashboard</span></div></div>
+        <div class="headline">
+          <div><h1>ภาพรวมโครงการ ปี 2026</h1><p class="subtitle">ติดตามมูลค่า Pipeline และสถานะของทุกโครงการในปีงบประมาณ</p></div>
+          <div class="freshness">ข้อมูล ณ วันที่ 25 สิงหาคม 2026<br>ขอบเขต: Company Forecast</div>
+        </div>
+      </div>
+    </header>
+    <main>
+      <section class="kpis" aria-label="ตัวชี้วัดหลัก">
+        <article class="card kpi"><div class="kpi-top"><span class="kpi-label">โครงการทั้งหมด</span><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg></span></div><div><div class="kpi-value">15</div><div class="kpi-note">โครงการในปีงบประมาณ 2026</div></div></article>
+        <article class="card kpi"><div class="kpi-top"><span class="kpi-label">มูลค่ารวม</span><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span></div><div><div class="kpi-value">621.85 ลบ.</div><div class="kpi-note">Forecast value ทั้งหมด</div></div></article>
+        <article class="card kpi win"><div class="kpi-top"><span class="kpi-label">มูลค่า WIN</span><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 4 4L19 6"/></svg></span></div><div><div class="kpi-value">112.65 ลบ.</div><div class="kpi-note">3 โครงการที่ปิดการขายแล้ว</div></div></article>
+        <article class="card kpi rate"><div class="kpi-top"><span class="kpi-label">WIN ต่อมูลค่ารวม</span><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg></span></div><div><div class="kpi-value">18.1%</div><div class="kpi-note">คิดจากมูลค่าโครงการทั้งหมด</div></div></article>
+      </section>
+
+      <section class="grid">
+        <article class="card panel">
+          <div class="panel-head"><div><h2>มูลค่าโครงการตามขั้นตอน</h2><p>หน่วย: ล้านบาท</p></div></div>
+          <div class="bar-list" id="stageBars"></div>
+        </article>
+        <article class="card panel">
+          <div class="panel-head"><div><h2>สัดส่วนมูลค่า WIN</h2><p>เทียบกับมูลค่าโครงการทั้งหมด</p></div></div>
+          <div class="donut-wrap"><div class="donut" role="img" aria-label="มูลค่า WIN ร้อยละ 18.1 ของมูลค่ารวม"><div class="donut-label"><strong>18.1%</strong><span>WIN value</span></div></div></div>
+          <div class="legend"><span><i class="dot green"></i>WIN 112.65 ลบ.</span><span><i class="dot gray"></i>Pipeline 509.20 ลบ.</span></div>
+        </article>
+      </section>
+
+      <section class="card table-card">
+        <div class="table-toolbar">
+          <div class="toolbar-title"><h2>รายละเอียดโครงการทั้งหมด</h2><p id="resultCount">แสดง 15 โครงการ</p></div>
+          <div class="filters">
+            <label class="field"><span class="sr-only"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="search" type="search" placeholder="ค้นหาโครงการหรือลูกค้า…" aria-label="ค้นหาโครงการหรือลูกค้า"></label>
+            <select id="stageFilter" aria-label="กรองตามขั้นตอน"><option value="all">ทุกขั้นตอน</option><option value="5">WIN</option><option value="4">Bidding / เสนอราคา</option><option value="3">ร่าง TOR</option><option value="2">ตั้งงบประมาณ</option><option value="1">นำเสนอ Solution</option><option value="none">ยังไม่ระบุขั้นตอน</option></select>
+            <select id="teamFilter" aria-label="กรองตามทีม"><option value="all">ทุกทีม</option><option value="6">ทีม 6</option><option value="8">ทีม 8</option></select>
+          </div>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>โครงการ / ลูกค้า</th><th>ขั้นตอน</th><th>วันที่ขั้นตอน</th><th class="num">มูลค่า (บาท)</th><th class="num">Sales ID</th><th class="num">ทีม</th></tr></thead>
+            <tbody id="projectRows"></tbody>
+          </table>
+        </div>
+        <div class="empty-state" id="emptyState">ไม่พบโครงการที่ตรงกับตัวกรอง</div>
+        <div class="footer-row"><span id="filteredValue">มูลค่ารวมที่แสดง 621.85 ล้านบาท</span><span>ข้อมูลจาก Prime MCP</span></div>
+      </section>
+    </main>
+  </div>
+  <script>
+    const projects = [
+      {id:191,project:"Cloud Platform 69",company:"การไฟฟ้าฝ่ายผลิตแห่งประเทศไทย",value:120000000,sales:34,team:6,stepOrder:1,step:"นำเสนอ Solution",stepDate:"2026-01-01"},
+      {id:240,project:"งานซื้อพร้อมติดตั้งระบบ Private Cloud Platform ปี 2569",company:"การไฟฟ้าฝ่ายผลิตแห่งประเทศไทย",value:120000000,sales:42,team:6,stepOrder:null,step:"ยังไม่ระบุขั้นตอน",stepDate:null},
+      {id:138,project:"ห้องปฎิบัติการและจัดเก็บข้อมูล ณ หอชมเมืองจังหวัดสมุทรปราการ",company:"เทศบาลตำบลบางเมือง",value:99000000,sales:42,team:6,stepOrder:4,step:"Bidding / เสนอราคา",stepDate:"2026-01-01"},
+      {id:198,project:"โครงการจัดหาครุภัณฑ์เทคโนโลยีสารสนเทศประจำปี 2569",company:"กรมชลประทาน",value:57808700,sales:34,team:6,stepOrder:3,step:"ร่าง TOR",stepDate:"2026-02-01"},
+      {id:239,project:"ซื้อพัฒนาประสิทธิภาพระบบจัดสวัสดิการเงินอุดหนุนเพื่อการเลี้ยงดูเด็กแรกเกิดแบบถ้วนหน้า ของกรมกิจการเด",company:"กรมกิจการเด็กและเยาวชน",value:57648000,sales:42,team:6,stepOrder:5,step:"WIN",stepDate:"2026-03-06"},
+      {id:197,project:"โครงการปรับปรุงระบบเทคโนโลยีสารสนเทศ ประจำปี 2569",company:"กรมชลประทาน",value:56569400,sales:34,team:6,stepOrder:3,step:"ร่าง TOR",stepDate:"2026-02-01"},
+      {id:237,project:"ยกระดับความปลอดภัยด้านทางไซเบอร์",company:"กระทรวงการพัฒนาสังคมและความมั่นคงของมนุษย์",value:40000000,sales:42,team:6,stepOrder:5,step:"WIN",stepDate:"2026-03-02"},
+      {id:193,project:"CCTV Replacement",company:"ธนาคารเพื่อการเกษตรและสหกรณ์การเกษตร",value:20000000,sales:44,team:8,stepOrder:null,step:"ยังไม่ระบุขั้นตอน",stepDate:null},
+      {id:230,project:"โครงการจัดทำแผนพัฒนาแหล่งน้ำระดับตำบล",company:"กรมชลประทาน",value:15000000,sales:35,team:6,stepOrder:2,step:"ตั้งงบประมาณ",stepDate:null},
+      {id:238,project:"พัฒนาระบบคำของบประมาณและระบบติดตาม",company:"กระทรวงการพัฒนาสังคมและความมั่นคงของมนุษย์",value:15000000,sales:42,team:6,stepOrder:5,step:"WIN",stepDate:"2026-03-16"},
+      {id:192,project:"โปรเจค Digital Signage เปลี่ยนจอ LED ชั้น 15 จำนวน 10 จอ",company:"ธนาคารเพื่อการเกษตรและสหกรณ์การเกษตร",value:10000000,sales:44,team:8,stepOrder:null,step:"ยังไม่ระบุขั้นตอน",stepDate:null},
+      {id:241,project:"งานซื้อลิขสิทธิ์การใช้ระบบตรวจจับภัยคุกคามทางไซเบอร์",company:"การไฟฟ้าฝ่ายผลิตแห่งประเทศไทย",value:6420000,sales:42,team:6,stepOrder:1,step:"นำเสนอ Solution",stepDate:null},
+      {id:189,project:"PDPA Replacement",company:"บริษัท บริหารสินทรัพย์ กรุงเทพพาณิชย์ จำกัด (มหาชน)",value:2000000,sales:44,team:8,stepOrder:1,step:"นำเสนอ Solution",stepDate:"2026-01-30"},
+      {id:245,project:"MCP",company:"กระทรวงยุติธรรม",value:1200000,sales:46,team:6,stepOrder:null,step:"ยังไม่ระบุขั้นตอน",stepDate:null},
+      {id:246,project:"MCP",company:"กระทรวงยุติธรรม",value:1200000,sales:46,team:6,stepOrder:null,step:"ยังไม่ระบุขั้นตอน",stepDate:null}
+    ];
+    const stages = [
+      {name:"ยังไม่ระบุขั้นตอน",value:152400000,kind:"empty"},
+      {name:"นำเสนอ Solution",value:128420000},
+      {name:"WIN",value:112648000,kind:"win"},
+      {name:"ร่าง TOR",value:114378100},
+      {name:"Bidding / เสนอราคา",value:99000000},
+      {name:"ตั้งงบประมาณ",value:15000000}
+    ].sort((a,b)=>b.value-a.value);
+    const maxStage = Math.max(...stages.map(s=>s.value));
+    const fmt = new Intl.NumberFormat("th-TH");
+    const fmtDate = date => date ? new Intl.DateTimeFormat("th-TH",{day:"numeric",month:"short",year:"numeric"}).format(new Date(date+"T00:00:00")) : "—";
+    const stageClass = p => p.stepOrder === 5 ? "win" : p.stepOrder === 4 ? "bid" : p.stepOrder == null ? "pending" : "";
+
+    document.getElementById("stageBars").innerHTML = stages.map(s => `
+      <div class="bar-row ${s.kind || ""}"><div class="bar-name" title="${s.name}">${s.name}</div><div class="track"><div class="bar" style="width:${(s.value/maxStage*100).toFixed(1)}%"></div></div><div class="bar-value">${(s.value/1e6).toFixed(2)} ลบ.</div></div>
+    `).join("");
+
+    function render() {
+      const q = document.getElementById("search").value.trim().toLocaleLowerCase("th");
+      const stage = document.getElementById("stageFilter").value;
+      const team = document.getElementById("teamFilter").value;
+      const rows = projects.filter(p => {
+        const matchText = !q || `${p.project} ${p.company} ${p.id}`.toLocaleLowerCase("th").includes(q);
+        const matchStage = stage === "all" || (stage === "none" ? p.stepOrder == null : String(p.stepOrder) === stage);
+        const matchTeam = team === "all" || String(p.team) === team;
+        return matchText && matchStage && matchTeam;
+      });
+      document.getElementById("projectRows").innerHTML = rows.map(p => `
+        <tr><td class="project"><strong>${p.project}</strong><span>${p.company} · ID ${p.id}</span></td><td><span class="stage ${stageClass(p)}">${p.step}</span></td><td>${fmtDate(p.stepDate)}</td><td class="num">${fmt.format(p.value)}</td><td class="num">${p.sales}</td><td class="num">${p.team}</td></tr>
+      `).join("");
+      const total = rows.reduce((sum,p)=>sum+p.value,0);
+      document.getElementById("resultCount").textContent = `แสดง ${fmt.format(rows.length)} จาก ${fmt.format(projects.length)} โครงการ`;
+      document.getElementById("filteredValue").textContent = `มูลค่ารวมที่แสดง ${(total/1e6).toLocaleString("th-TH",{minimumFractionDigits:2,maximumFractionDigits:2})} ล้านบาท`;
+      document.getElementById("emptyState").style.display = rows.length ? "none" : "block";
+      document.querySelector(".table-scroll").style.display = rows.length ? "block" : "none";
+    }
+    document.getElementById("search").addEventListener("input", render);
+    document.getElementById("stageFilter").addEventListener("change", render);
+    document.getElementById("teamFilter").addEventListener("change", render);
+    render();
+  </script>
+</body>
+</html>
