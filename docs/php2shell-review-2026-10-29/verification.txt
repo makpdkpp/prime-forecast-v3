@@ -1,0 +1,90 @@
+Prime Forecast V3 / PHP2Shell review
+Review date: 2026-10-29 (Asia/Bangkok)
+Workspace: C:/laragon/www/Prime-Forecast-V3
+HEAD: d46e1ff0b9faae6c47021f1b19fb7beaa776b372
+
+This file summarizes observed command outputs. It is not an exploitation log.
+No application source, credentials, PHP installation or server configuration was changed.
+
+[PHP CLI]
+PHP 8.3.30 (cli), ZTS Visual C++ 2019 x64
+Loaded ini: C:/laragon/bin/php/php-8.3.30-Win32-vs16-x64/php.ini
+No additional ini files scanned.
+session.upload_progress.enabled = 1
+session.serialize_handler = php
+display_errors = 1 (raw CLI before Laravel boot)
+display_startup_errors = 1
+allow_url_include = Off
+expose_php = 1
+memory_limit = 512M
+post_max_size = 2G
+curl_version(): libcurl 8.16.0, Brotli version empty / brotli_ver_num 0
+
+[Apache configuration read]
+C:/laragon/etc/apache2/mod_php.conf:4
+LoadModule php_module "C:/laragon/bin/php/php-8.3.30-Win32-vs16-x64/php8apache2_4.dll"
+mod_php.conf:5
+PHPIniDir "C:/laragon/bin/php/php-8.3.30-Win32-vs16-x64"
+Apache conf/httpd.conf:555 includes this mod_php.conf.
+Project vhost DocumentRoot: C:/laragon/www/Prime-Forecast-V3/public
+Project directory: AllowOverride All
+
+[Benign local HTTP requests]
+Base: http://127.0.0.1
+Host header: Prime-Forecast-V3.test
+GET /login -> 200
+Server: Apache/2.4.66 (Win64) OpenSSL/3.0.18 PHP/8.3.30
+X-Powered-By: PHP/8.3.30
+GET /.user.ini -> 403
+GET /uploads/.htaccess -> 403
+No phpinfo endpoint, executable upload, OOM request or exploit was used.
+
+[php artisan security:php-check]
+Exit status: 1
+PHP 8.3.30 / cli
+Production baseline PHP 8.4.27+ on 8.4 branch: FAIL
+session.upload_progress.enabled disabled: FAIL
+display_errors disabled: PASS (in Artisan process after Laravel boot)
+display_startup_errors disabled: FAIL
+allow_url_include disabled: PASS
+Laravel debug disabled: FAIL
+This process does not load public/.user.ini. It does not certify web settings.
+
+[Security regression tests]
+php vendor/bin/phpunit --bootstrap tests/mcp-bootstrap.php --do-not-cache-result --filter 'PhpSecurityConfigurationTest|PhpSecurityCheckTest|SecurityHeadersTest|AuthenticationHardeningTest|XssRenderingTest'
+PHPUnit 11.5.56 / PHP 8.3.30
+Exit status: 0
+OK (10 tests, 41 assertions)
+
+[Authorization / MCP regression tests]
+php vendor/bin/phpunit --bootstrap tests/mcp-bootstrap.php --do-not-cache-result --filter 'UserTeamAuthorizationTest|McpGatewayTest|McpOAuthMetadataTest|McpSalesDraftTest' --log-junit docs/php2shell-review-2026-10-29/targeted-tests.xml --colors=never
+Exit status: 0
+OK (40 tests, 229 assertions)
+Isolation from tests/mcp-bootstrap.php: SQLite :memory:, cache/session array, mail array, log null, test key; application config cache path isolated.
+Total: 50 tests, 270 assertions. Only these relevant test groups were run.
+
+[Composer audit]
+composer --no-cache audit --locked --no-dev --format=json --no-interaction
+Audit exit status: 1 (advisories found).
+4 advisories in 2 production packages; high 2 / medium 2; abandoned 0.
+composer --no-cache audit --locked --format=json --no-interaction
+Same 4 advisories including dev; saved as composer-audit.json.
+The PowerShell pipeline that saved JSON exited 0; this does not mean audit passed.
+Initial restricted-network request failed. Automatic approval rejected an external retry because dependency metadata could be private. User explicitly authorized sending package names and versions to Packagist; the later authorized audit completed.
+No package was installed or updated.
+
+[composer check-platform-reqs --no-dev]
+ext-zip: missing; required by phpoffice/phpspreadsheet.
+PHP 8.3.30 satisfies the Composer language constraint, which does not enforce security patch versions.
+
+[npm audit --json --ignore-scripts]
+Exit status: 1
+Registry advisory endpoint request failed in restricted network.
+No current npm vulnerability conclusion is available.
+No subsequent external npm retry was made.
+
+[Limitations]
+No Production/Plesk access or effective web ini verification.
+OS process enumeration with CIM returned Access denied.
+Source inventory and signatures cannot prove absence of compromise.
+No database migration, package upgrade, deployment or exploitation was performed.

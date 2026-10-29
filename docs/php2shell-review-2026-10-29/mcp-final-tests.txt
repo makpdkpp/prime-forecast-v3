@@ -1,0 +1,136 @@
+TAP version 13
+# Subtest: MCP endpoint rejects requests without a bearer token
+ok 1 - MCP endpoint rejects requests without a bearer token
+  ---
+  duration_ms: 76.0104
+  type: 'test'
+  ...
+# Subtest: sales pilot OAuth discovery uses metadata scopes without requiring write access for reads
+ok 2 - sales pilot OAuth discovery uses metadata scopes without requiring write access for reads
+  ---
+  duration_ms: 142.4133
+  type: 'test'
+  ...
+# Subtest: MCP endpoint maps a rejected bearer token to 401, never 500
+ok 3 - MCP endpoint maps a rejected bearer token to 401, never 500
+  ---
+  duration_ms: 39.4572
+  type: 'test'
+  ...
+# Subtest: sales receives only its allowed tools
+ok 4 - sales receives only its allowed tools
+  ---
+  duration_ms: 15.2097
+  type: 'test'
+  ...
+# Subtest: team receives only its allowed tools
+ok 5 - team receives only its allowed tools
+  ---
+  duration_ms: 31.2727
+  type: 'test'
+  ...
+# Subtest: admin receives only its allowed tools
+ok 6 - admin receives only its allowed tools
+  ---
+  duration_ms: 14.3789
+  type: 'test'
+  ...
+# Subtest: sales can call own forecast and every call emits a Laravel audit event
+ok 7 - sales can call own forecast and every call emits a Laravel audit event
+  ---
+  duration_ms: 17.0103
+  type: 'test'
+  ...
+# Subtest: team admin cannot escape assigned team scope
+ok 8 - team admin cannot escape assigned team scope
+  ---
+  duration_ms: 15.1121
+  type: 'test'
+  ...
+# Subtest: sales cannot invoke an unregistered company tool directly
+ok 9 - sales cannot invoke an unregistered company tool directly
+  ---
+  duration_ms: 14.0625
+  type: 'test'
+  ...
+# Subtest: gateway rejection keeps its HTTP status in the Laravel audit event
+ok 10 - gateway rejection keeps its HTTP status in the Laravel audit event
+  ---
+  duration_ms: 10.7972
+  type: 'test'
+  ...
+# Subtest: health and readiness endpoints report independently
+ok 11 - health and readiness endpoints report independently
+  ---
+  duration_ms: 15.5017
+  type: 'test'
+  ...
+# Subtest: sales can see only their own forecast tool
+ok 12 - sales can see only their own forecast tool
+  ---
+  duration_ms: 2.2044
+  type: 'test'
+  ...
+# Subtest: team admin can see self and team tools but not company tool
+ok 13 - team admin can see self and team tools but not company tool
+  ---
+  duration_ms: 0.2702
+  type: 'test'
+  ...
+# Subtest: admin can see every phase 1 tool
+ok 14 - admin can see every phase 1 tool
+  ---
+  duration_ms: 0.2574
+  type: 'test'
+  ...
+# Subtest: role alone is insufficient when explicit permission is missing
+ok 15 - role alone is insufficient when explicit permission is missing
+  ---
+  duration_ms: 0.2116
+  type: 'test'
+  ...
+# Subtest: team admin is restricted to assigned teams while admin is global
+ok 16 - team admin is restricted to assigned teams while admin is global
+  ---
+  duration_ms: 0.8052
+  type: 'test'
+  ...
+# Subtest: there are no write-like tools in phase 1 registry
+ok 17 - there are no write-like tools in phase 1 registry
+  ---
+  duration_ms: 0.3357
+  type: 'test'
+  ...
+# Subtest: write tools require explicit permission, role and feature flag
+ok 18 - write tools require explicit permission, role and feature flag
+  ---
+  duration_ms: 279.5348
+  type: 'test'
+  ...
+# Subtest: draft calls preserve idempotency and audit without contact values; status is explicit
+ok 19 - draft calls preserve idempotency and audit without contact values; status is explicit
+  ---
+  duration_ms: 37.9693
+  type: 'test'
+  ...
+# Subtest: cross-team and owner injection never reach draft gateway
+ok 20 - cross-team and owner injection never reach draft gateway
+  ---
+  duration_ms: 24.5519
+  type: 'test'
+  ...
+# Subtest: write configuration defaults off and rejects production hosts or stdout audit
+ok 21 - write configuration defaults off and rejects production hosts or stdout audit
+  ---
+  duration_ms: 1.4745
+  type: 'test'
+  ...
+1..21
+# tests 21
+# suites 0
+# pass 21
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 777.6843

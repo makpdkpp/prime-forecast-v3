@@ -1,0 +1,32 @@
+{
+    "total_files": 14526,
+    "total_php": 10237,
+    "first_party_candidates": [
+        {
+            "path": "scripts/mcp-preflight.php",
+            "line": 36,
+            "kind": "proc_open"
+        }
+    ],
+    "app_routes_candidates": [],
+    "storage_candidates": [],
+    "all_candidate_count": 1147,
+    "broken_local_links": [],
+    "report_sections": 13,
+    "report_findings": 6,
+    "advisory_count": 4,
+    "report_sha256": "fa5fda624c78cfb76616e5672d403bc29f12ea61e738a46e4eb43ff10af0dfdc",
+    "mcp_files": 41,
+    "mcp_js_count": 15,
+    "mcp_php_count": 11,
+    "mcp_npm_affected_packages": 9,
+    "mcp_tests": {
+        "tests": 21,
+        "passed": 21,
+        "failed": 0,
+        "skipped": 0,
+        "external_gateway": "mocked"
+    },
+    "final_production_decision": "HOLD_CONDITIONAL_COMMIT_PUSH",
+    "delivery_authorization": "EXPLICIT_USER_COMMIT_PUSH"
+}

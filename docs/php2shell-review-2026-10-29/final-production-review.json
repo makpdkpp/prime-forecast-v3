@@ -1,0 +1,59 @@
+{
+    "review_date": "2026-10-29",
+    "timezone": "Asia/Bangkok",
+    "requested_production_php": "8.4.27",
+    "production_runtime_verified": false,
+    "available_local_php": "8.3.30",
+    "decision": "HOLD_CONDITIONAL_COMMIT_PUSH",
+    "commit_created": false,
+    "push_performed": false,
+    "php_lint": {
+        "files": 162,
+        "failures": 0
+    },
+    "laravel_mcp_preflight": {
+        "tests": 39,
+        "assertions": 228,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "run_id": "20261029-063835-c7a7346c"
+    },
+    "security_tests": {
+        "tests": 10,
+        "assertions": 41,
+        "failed": 0
+    },
+    "node_mcp_tests": {
+        "tests": 21,
+        "passed": 21,
+        "failed": 0,
+        "skipped": 0,
+        "runtime": "v26.7.0",
+        "deployment_runtime_tested": false
+    },
+    "composer_validate": "passed",
+    "git_diff_check": "passed",
+    "composer_production_advisories": {
+        "total": 4,
+        "high": 2,
+        "medium": 2
+    },
+    "mcp_npm_affected_package_entries": {
+        "total": 9,
+        "critical": 1,
+        "high": 4,
+        "moderate": 4
+    },
+    "mcp_manifests_unchanged_since_audit": true,
+    "blockers": [
+        "Composer production dependency advisories remain",
+        "MCP npm dependency audit does not meet the repository CI audit-level=high gate"
+    ],
+    "deployment_verification_pending": [
+        "Actual PHP 8.4.27 web/CLI workers and extensions",
+        "Startup-level session.upload_progress.enabled=0 and worker restart",
+        "Production Node reverse proxy/document root and target runtime tests"
+    ],
+    "production_sales_write": "Remains disabled by existing application policy; not a blocker for read-only deployment"
+}

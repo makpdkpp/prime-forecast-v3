@@ -1,0 +1,223 @@
+{
+    "date": "2026-10-29",
+    "timezone": "Asia/Bangkok",
+    "root": "C:\\laragon\\www/prime-forecast-mcp",
+    "head": "3f4a3c0dca2e8a1b968fcb9c64439f5bfd605d2f",
+    "package": "prime-forecast-mcp",
+    "version": "0.1.0",
+    "node_observed": "v26.7.0",
+    "npm_observed": "11.19.0",
+    "node_required": "24.19.0",
+    "excluded": [
+        ".git",
+        "node_modules",
+        "outputs",
+        "work",
+        "coverage"
+    ],
+    "files": {
+        ".env.example": {
+            "size": 390,
+            "sha256": "454b5d04594d0299cce46199244414b9fd59c4402b1999bf4b660df480343aaf"
+        },
+        ".gitattributes": {
+            "size": 40,
+            "sha256": "a51d4446ea808450aac392ca1176440927d4a58ae4a5e605266db1ab00c29a3f"
+        },
+        ".github/workflows/ci.yml": {
+            "size": 402,
+            "sha256": "2b91e836306fd2cd26c4b9ad60becd0e16142da0a045314626b48a3c0ce5ddd9"
+        },
+        ".gitignore": {
+            "size": 102,
+            "sha256": "7eb479e932f7b45ffd5b1f90847f4b889f3c32176306806e7414e6aade493531"
+        },
+        "README.md": {
+            "size": 2554,
+            "sha256": "4975b8bacd374720669c2e631406e95ba4ece6411ccf29e1c2b2eb52aff5e006"
+        },
+        "app.js": {
+            "size": 911,
+            "sha256": "05c1f27401cc81529b639ab6db438d029b751847aeca536bb9134b3d8a476193"
+        },
+        "docs/api-contract.md": {
+            "size": 3312,
+            "sha256": "5b899d492ad1fdb032d9efaf22c5581bbc37a3b327757745e61b9d6140d64e46"
+        },
+        "docs/architecture.md": {
+            "size": 2506,
+            "sha256": "2a5654b23dee9ec17ef759a2d80ede3b2d010530e24dfa3828ec01a3a645889a"
+        },
+        "docs/deploy-plesk.md": {
+            "size": 4612,
+            "sha256": "48ad239e34a1f24c7deec577d2a8ea1b2ed8ffd40b357ce8dade0447990d0553"
+        },
+        "docs/laravel-integration.md": {
+            "size": 1593,
+            "sha256": "d66a4ccf9dec484f9483f75af4e93942682acb77ebaef7f56a352d1d3b98c35d"
+        },
+        "docs/permission-matrix.md": {
+            "size": 1437,
+            "sha256": "c069105df0f6202ba493901816eb07c37b3e0b1745414c2a2cfcf75f043e1d99"
+        },
+        "docs/phase-1-plan.md": {
+            "size": 3818,
+            "sha256": "f9f21dbabb684b27f900e390a9e3d5207cae7e3f6cce303f71a1aaaa6d67d4c3"
+        },
+        "docs/sales-create-demo.md": {
+            "size": 3192,
+            "sha256": "ad12018dc2cc466b4931f0716b51637a03e73934c3511d05c3f099dc3769d2da"
+        },
+        "laravel-example/app/Contracts/ForecastReadRepository.php": {
+            "size": 483,
+            "sha256": "7efbaac950b090f3ad7d6ad3c28a9ab9f0bbe87dce8b9e85aeb63fed014b445a"
+        },
+        "laravel-example/app/Contracts/McpPrincipalResolver.php": {
+            "size": 304,
+            "sha256": "16bb99cc766ba2d8ce116c8a1059e767f7006d6be59f5b59f40451006519185f"
+        },
+        "laravel-example/app/Contracts/SalesTeamResolver.php": {
+            "size": 232,
+            "sha256": "af9a356dfb038e49a8de45ebdad11c56768963c273dd8a8db5250d729312c0a1"
+        },
+        "laravel-example/app/Data/McpPrincipal.php": {
+            "size": 352,
+            "sha256": "5a2bf55af47ce54b2825dd126392777f7806ca2e3bcc7aeaaf394b8ca41215be"
+        },
+        "laravel-example/app/Http/Controllers/Api/Mcp/AuditEventController.php": {
+            "size": 1271,
+            "sha256": "c96303b8a81d4738445a3e2dbc5d0628b776c1c28420bf4bb933996a0523cd3d"
+        },
+        "laravel-example/app/Http/Controllers/Api/Mcp/AuthContextController.php": {
+            "size": 753,
+            "sha256": "ecd531c3a9167c41b76c43e7777c03082aac77e5c3ed35d96afec00ea9d32a2e"
+        },
+        "laravel-example/app/Http/Controllers/Api/Mcp/ForecastReadController.php": {
+            "size": 2199,
+            "sha256": "1d2bec506e8a89f28c859d733faf4f5d76b29de6a41bf715e529c10578c0389f"
+        },
+        "laravel-example/app/Http/Middleware/RequireMcpServiceKey.php": {
+            "size": 691,
+            "sha256": "856c7e3230ac66afd64de528614fa3ccccfcc533c6c8c3a9732978673b3c35ff"
+        },
+        "laravel-example/app/Http/Requests/McpForecastQueryRequest.php": {
+            "size": 585,
+            "sha256": "00d03034bbb7af53a9e300b216976921bc9830d6f8de9f19e373b95534852709"
+        },
+        "laravel-example/app/Services/McpAuthorizationService.php": {
+            "size": 1368,
+            "sha256": "110073385b70c76a5432c02bf070a387ad4dc322cfcc7799af034552485ebd99"
+        },
+        "laravel-example/config/services.php.fragment": {
+            "size": 213,
+            "sha256": "a154a0532e71dabdc0edb98f0c574ef11c83d7b555e55a9b21773a897f3f39b6"
+        },
+        "laravel-example/routes/api-mcp.php": {
+            "size": 949,
+            "sha256": "038f641d4edfc7f678ed45e2396243f74695124c393de51e923336c36a244604"
+        },
+        "package-lock.json": {
+            "size": 35282,
+            "sha256": "db23305b31fde3d8d4e1c0ffe99e6bd50666ca6a8611b5e9572ccb8ff8cfdba2"
+        },
+        "package.json": {
+            "size": 660,
+            "sha256": "02b07509a098e89bf738fdec2aa62ce2e63ec4492cd12e6f7daca9ef61b500e5"
+        },
+        "src/audit.js": {
+            "size": 695,
+            "sha256": "221524642e241ae9fbda562e64ea997010bacc3b600bed9753151cd6afb6a99c"
+        },
+        "src/config.js": {
+            "size": 2965,
+            "sha256": "70c6b3afb456567937b5a608539f899279f34580b51d404e665932589d3d7062"
+        },
+        "src/errors.js": {
+            "size": 551,
+            "sha256": "245124f8aec61dfbd556ac8d59445a17425cc29970a472e71147f54dfa0c7f9f"
+        },
+        "src/http-app.js": {
+            "size": 6107,
+            "sha256": "007302d9b65cbf8afaf4c498bd9b8f622802664ada753b6a1761c37a0adf3f6b"
+        },
+        "src/laravel-client.js": {
+            "size": 5893,
+            "sha256": "4c8a006ad72a56a5d85e54f3da66aee302ff17a0bfe157f3c7429bf361468bf0"
+        },
+        "src/logger.js": {
+            "size": 1128,
+            "sha256": "b0bebb02891e9f0c70636bc97c966fb2d268ff54d1ba29128119cd350930e80e"
+        },
+        "src/mcp-server.js": {
+            "size": 2254,
+            "sha256": "29f991efea41698df380a7e6aedb5b246fdacc29a204f15e8d0bfc605af6d708"
+        },
+        "src/permission-guard.js": {
+            "size": 2046,
+            "sha256": "f046d3a26c55a0e4d4545712ba6535c602904bcd318bee8f5348483face31b9d"
+        },
+        "src/sales-create-tools.js": {
+            "size": 4508,
+            "sha256": "b7eb8d4f98b5a01ab0f554aa85496ffecfbc6887af486a1becda7939d059f4f3"
+        },
+        "src/tools.js": {
+            "size": 4332,
+            "sha256": "4e864286fe5b0574a03a14f78193f1f0426d3e1ac66ea91b6a27c976c3b6c815"
+        },
+        "test/helpers.js": {
+            "size": 4287,
+            "sha256": "6145f28136fd52bae29e6b400a8ff99e666ea72e7036c463fc55c3a7581d43fc"
+        },
+        "test/mcp-tools.test.js": {
+            "size": 7129,
+            "sha256": "bebf51c0b5c4539c4c848048be7b660d5d17dd4200147f83f7c7362f1335df83"
+        },
+        "test/permission-guard.test.js": {
+            "size": 1695,
+            "sha256": "2d4f2f78d6f3afd7186be250fa70e4711e07947cc29aa4f20680947536e19e45"
+        },
+        "test/sales-create.test.js": {
+            "size": 5406,
+            "sha256": "0a41c34b52721f4aa63c00f96641d71625bd32a32314ea67709a9df53d72e6c0"
+        }
+    },
+    "js_count": 15,
+    "php_count": 11,
+    "fragment_count": 1,
+    "js_execution_candidates": [],
+    "php_execution_candidates": [],
+    "root_env_file_present": false,
+    "root_htaccess_present": false,
+    "npm_summary": {
+        "vulnerabilities": {
+            "info": 0,
+            "low": 0,
+            "moderate": 4,
+            "high": 4,
+            "critical": 1,
+            "total": 9
+        },
+        "dependencies": {
+            "prod": 77,
+            "dev": 0,
+            "optional": 0,
+            "peer": 1,
+            "peerOptional": 0,
+            "total": 77
+        }
+    },
+    "tests": {
+        "tests": 21,
+        "passed": 21,
+        "failed": 0,
+        "skipped": 0,
+        "external_gateway": "mocked"
+    },
+    "http_probe": {
+        "url": "http://127.0.0.1/package.json",
+        "host": "prime-forecast-mcp.test",
+        "status": 200,
+        "package_name": "prime-forecast-mcp",
+        "server": "Apache/2.4.66 (Win64) OpenSSL/3.0.18 PHP/8.3.30"
+    }
+}

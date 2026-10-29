@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="./vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="tests/mcp-bootstrap.php" colors="false" cacheResult="false"
+         failOnWarning="true" failOnRisky="true" failOnSkipped="true" failOnIncomplete="true">
+    <testsuites>
+        <testsuite name="MCP preflight">
+            <file>tests/Feature/McpGatewayTest.php</file>
+            <file>tests/Feature/McpOAuthMetadataTest.php</file>
+            <file>tests/Feature/McpSalesDraftTest.php</file>
+        </testsuite>
+    </testsuites>
+</phpunit>

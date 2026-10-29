@@ -1,0 +1,78 @@
+{
+    "advisories": {
+        "phpoffice/phpspreadsheet": [
+            {
+                "advisoryId": "PKSA-r15m-kszr-8n8q",
+                "packageName": "phpoffice/phpspreadsheet",
+                "affectedVersions": "<=1.30.6|>=2.0.0,<=2.1.18|>=2.2.0,<=2.4.7|>=3.3.0,<=3.10.7|>=4.0.0,<=5.9.0",
+                "title": "PhpSpreadsheet: SSRF whitelist bypass via unre-validated HTTP redirect in Drawing::setPath external image loading",
+                "cve": "CVE-2026-108360",
+                "link": "https://github.com/advisories/GHSA-2phh-27fw-q4gc",
+                "reportedAt": "2026-10-27T15:38:39+00:00",
+                "sources": [
+                    {
+                        "name": "GitHub",
+                        "remoteId": "GHSA-2phh-27fw-q4gc"
+                    }
+                ],
+                "severity": "medium"
+            },
+            {
+                "advisoryId": "PKSA-dxd5-wy68-pq29",
+                "packageName": "phpoffice/phpspreadsheet",
+                "affectedVersions": "<=1.30.6|>=2.0.0,<=2.1.18|>=2.2.0,<=2.4.7|>=3.3.0,<=3.10.7|>=4.0.0,<=5.9.0",
+                "title": "PhpSpreadsheet ODS Reader: Unbounded number-rows-repeated → CPU & Memory Exhaustion (DoS)",
+                "cve": "CVE-2026-108359",
+                "link": "https://github.com/advisories/GHSA-j2w7-387v-m2rq",
+                "reportedAt": "2026-10-27T15:38:33+00:00",
+                "sources": [
+                    {
+                        "name": "GitHub",
+                        "remoteId": "GHSA-j2w7-387v-m2rq"
+                    }
+                ],
+                "severity": "high"
+            },
+            {
+                "advisoryId": "PKSA-96jv-mtjg-g2v8",
+                "packageName": "phpoffice/phpspreadsheet",
+                "affectedVersions": "<=1.30.6|>=2.0.0,<=2.1.18|>=2.2.0,<=2.4.7|>=3.3.0,<=3.10.7|>=4.0.0,<=5.9.0",
+                "title": "PhpSpreadsheet: XmlScanner Bypass via ISO-2022 Escape Sequences Allows XXE and Denial of Service",
+                "cve": "CVE-2026-108358",
+                "link": "https://github.com/advisories/GHSA-3x94-m842-937c",
+                "reportedAt": "2026-10-27T15:38:28+00:00",
+                "sources": [
+                    {
+                        "name": "GitHub",
+                        "remoteId": "GHSA-3x94-m842-937c"
+                    }
+                ],
+                "severity": "high"
+            }
+        ],
+        "symfony/mime": [
+            {
+                "advisoryId": "PKSA-wtxr-p26d-nn42",
+                "packageName": "symfony/mime",
+                "affectedVersions": ">=2.0.0,<3.0.0|>=3.0.0,<4.0.0|>=4.0.0,<5.0.0|>=5.0.0,<5.1.0|>=5.1.0,<5.2.0|>=5.2.0,<5.3.0|>=5.3.0,<5.4.0|>=5.4.0,<5.4.55|>=6.0.0,<6.1.0|>=6.1.0,<6.2.0|>=6.2.0,<6.3.0|>=6.3.0,<6.4.0|>=6.4.0,<6.4.49|>=7.0.0,<7.1.0|>=7.1.0,<7.2.0|>=7.2.0,<7.3.0|>=7.3.0,<7.4.0|>=7.4.0,<7.4.22|>=8.0.0,<8.1.0|>=8.1.0,<8.1.10",
+                "title": "CVE-2026-45070: Email Header Injection via Non-Token Characters in Mime Parameter Names",
+                "cve": "CVE-2026-45070",
+                "link": "https://symfony.com/cve-2026-45070",
+                "reportedAt": "2026-10-28T18:08:54+00:00",
+                "sources": [
+                    {
+                        "name": "GitHub",
+                        "remoteId": "GHSA-vqc8-7275-q272"
+                    },
+                    {
+                        "name": "FriendsOfPHP/security-advisories",
+                        "remoteId": "symfony/mime/CVE-2026-45070.yaml"
+                    }
+                ],
+                "severity": "medium"
+            }
+        ]
+    },
+    "abandoned": [],
+    "filter": []
+}
