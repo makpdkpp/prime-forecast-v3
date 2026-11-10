@@ -18,7 +18,7 @@ prepare_sales_project and get_sales_project_draft.
 
 ## Gates and transaction
 
-Explicit mcp:read and mcp:sales:create token abilities, active account, tester allowlist,
+Explicit mcp:read and mcp:sales:create token abilities, active account, per-user Create permission,
 role, staging environment, feature flag and audit enabled are all required. Wildcard
 tokens do not authorize creation. OAuth write scope requires browser consent.
 
@@ -44,19 +44,27 @@ APP_DEBUG=false
 PRIME_MCP_ENABLED=true
 PRIME_MCP_AUDIT_ENABLED=true
 PRIME_MCP_SALES_CREATE_ENABLED=false
-PRIME_MCP_SALES_CREATE_USER_IDS=
 ```
 
-Empty allowlist allows nobody. Production environment is rejected regardless of flag.
+Manage Create permission at `/admin/users` in the create/edit form. New users default
+to no Create permission. Read access continues to follow the existing role/team rules.
+The migration `2026_11_09_000001_add_mcp_sales_create_enabled_to_user` imports existing
+Sales/Team Admin IDs from `PRIME_MCP_SALES_CREATE_USER_IDS` once. Keep that legacy
+configuration available until the migration finishes; afterwards it is ignored at runtime
+and can be removed. Disabling Create also blocks existing write tokens, OAuth write
+refreshes and pending draft confirmation; read access remains available. A read-only
+token needs a new write authorization after enabling Create.
+Production environment is rejected regardless of flag or per-user permission.
 Node uses MCP_SALES_CREATE_ENABLED=false by default and restricts
 enablement to HTTPS Demo hosts with Laravel audit enabled.
 
 1. Deploy tested commits in both repos with write flags off; back up Demo DB.
 2. Plesk Run a PHP script: demo.primes.co.th/artisan, arguments migrate --force.
-   This creates mcp_sales_drafts. Do not repeat artisan in arguments.
+   This creates mcp_sales_drafts and the per-user Create permission column, importing
+   legacy grants. Do not repeat artisan in arguments.
 3. Run config:clear using the same script. Restart PHP as required.
 4. NPM Install / restart Node after MCP deploy; verify readiness and read tools.
-5. Populate selected tester IDs, enable both flags on Demo, clear config and restart
+5. Enable Create for selected Sales/Team Admin accounts at `/admin/users`, enable both flags on Demo, clear config and restart
    Node. Reauthorize OAuth with write consent, or opt in on the Demo token page.
 6. Test own creation, cross-team/owner rejection, revoked/expired tokens, confirmation,
    retry and audit. Verify exactly one project on the normal dashboard.

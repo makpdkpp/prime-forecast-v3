@@ -78,6 +78,8 @@
                     </div>
                 </div>
                 
+                @include('admin.master.users._mcp-permissions')
+
                 <!-- Forecast Targets Section -->
                 <div class="row">
                     <div class="col-md-12">

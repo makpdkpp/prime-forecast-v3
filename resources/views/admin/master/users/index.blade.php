@@ -41,6 +41,7 @@
                         <th>ตำแหน่ง</th>
                         <th>Forecast</th>
                         <th>สถานะ</th>
+                        <th>MCP Create</th>
                         <th>จัดการ</th>
                     </tr>
                 </thead>
@@ -58,6 +59,13 @@
                                 <span class="badge badge-success">Active</span>
                             @else
                                 <span class="badge badge-danger">Inactive</span>
+                            @endif
+                        </td>
+                        <td>
+                            @if($user->mcp_sales_create_enabled && in_array((int) $user->role_id, [2, 3], true))
+                                <span class="badge badge-success">อนุญาต</span>
+                            @else
+                                <span class="badge badge-secondary">ปิด</span>
                             @endif
                         </td>
                         <td>

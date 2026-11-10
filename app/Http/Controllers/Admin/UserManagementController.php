@@ -36,6 +36,7 @@ class UserManagementController extends Controller
             'surename' => 'required|string|max:255',
             'role_id' => 'required|integer',
             'position_id' => 'required|integer',
+            'mcp_sales_create_enabled' => 'required|boolean',
             'targets' => 'nullable|array',
             'targets.*.year' => 'required_with:targets|string|max:10',
             'targets.*.value' => 'required_with:targets|numeric|min:0',
@@ -53,6 +54,8 @@ class UserManagementController extends Controller
             'role_id' => $request->role_id,
             'position_id' => $request->position_id,
             'is_active' => 0, // Inactive until user sets password
+            'mcp_sales_create_enabled' => $request->boolean('mcp_sales_create_enabled')
+                && in_array((int) $request->role_id, [2, 3], true),
             'reset_token' => hash('sha256', $token),
             'token_expiry' => $tokenExpiry,
             'avatar_path' => null,
@@ -121,12 +124,15 @@ class UserManagementController extends Controller
             'surename' => 'required|string|max:255',
             'role_id' => 'required|integer',
             'position_id' => 'required|integer',
+            'mcp_sales_create_enabled' => 'required|boolean',
             'targets' => 'nullable|array',
             'targets.*.year' => 'required_with:targets|string|max:10',
             'targets.*.value' => 'required_with:targets|numeric|min:0',
         ]);
 
         $updateData = [
+            'mcp_sales_create_enabled' => $request->boolean('mcp_sales_create_enabled')
+                && in_array((int) $request->role_id, [2, 3], true),
             'email' => $request->email,
             'nname' => $request->nname,
             'surename' => $request->surename,

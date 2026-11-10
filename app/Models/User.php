@@ -31,6 +31,7 @@ class User extends Authenticatable
         'avatar_path',
         'position_id',
         'is_active',
+        'mcp_sales_create_enabled',
         'reset_token',
         'token_expiry',
         'two_factor_enabled',
@@ -57,6 +58,7 @@ class User extends Authenticatable
     protected $casts = [
         'token_expiry' => 'datetime',
         'is_active' => 'boolean',
+        'mcp_sales_create_enabled' => 'boolean',
         'role_id' => 'integer',
         'two_factor_enabled' => 'boolean',
         'two_factor_expires_at' => 'datetime',

@@ -304,6 +304,7 @@ class McpGatewayTest extends TestCase
             $table->string('nname');
             $table->string('surename');
             $table->boolean('is_active')->default(true);
+            $table->boolean('mcp_sales_create_enabled')->default(false);
             $table->softDeletes();
         });
         Schema::create('personal_access_tokens', function (Blueprint $table) {

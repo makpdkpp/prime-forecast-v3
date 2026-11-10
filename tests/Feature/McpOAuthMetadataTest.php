@@ -52,6 +52,7 @@ class McpOAuthMetadataTest extends TestCase
             $table->string('password');
             $table->unsignedInteger('role_id');
             $table->boolean('is_active')->default(true);
+            $table->boolean('mcp_sales_create_enabled')->default(false);
             $table->softDeletes();
         });
         Schema::create('personal_access_tokens', function (Blueprint $table) {
@@ -172,7 +173,7 @@ class McpOAuthMetadataTest extends TestCase
         config()->set('services.prime_mcp.audit_enabled', true);
         config()->set('services.prime_mcp.sales_create_enabled', true);
         $id = DB::table('user')->insertGetId(['email' => 'writer@example.test', 'password' => 'unused', 'role_id' => 3, 'is_active' => true]);
-        config()->set('services.prime_mcp.sales_create_user_ids', [$id]);
+        DB::table('user')->where('user_id', $id)->update(['mcp_sales_create_enabled' => true]);
         $user = User::findOrFail($id);
         $redirect = 'http://127.0.0.1:5555/callback/test';
         DB::table('mcp_oauth_clients')->insert(['client_id' => 'writer', 'client_name' => 'Codex', 'redirect_uris' => json_encode([$redirect])]);
@@ -192,11 +193,16 @@ class McpOAuthMetadataTest extends TestCase
         $this->assertSame('https://demo.primes.co.th', $callback['iss']);
         $this->postJson('/oauth/write-consent', ['nonce' => $nonce, 'confirm' => 1])->assertForbidden();
         $body = ['grant_type' => 'authorization_code', 'code' => $callback['code'], 'client_id' => 'writer', 'redirect_uri' => $redirect, 'code_verifier' => $verifier, 'resource' => $query['resource']];
-        $token = $this->postJson('/oauth/token', $body)->assertOk()->assertJsonPath('scope', 'mcp:read mcp:sales:create')->json('access_token');
+        $issued = $this->postJson('/oauth/token', $body)->assertOk()->assertJsonPath('scope', 'mcp:read mcp:sales:create');
+        $token = $issued->json('access_token');
         $stored = PersonalAccessToken::findToken($token);
         $this->assertSame(['mcp:read', 'mcp:sales:create'], $stored->abilities);
         $this->postJson('/oauth/token', $body)->assertStatus(400)->assertJsonPath('error', 'invalid_grant');
-        config()->set('services.prime_mcp.sales_create_user_ids', []);
+        $user->update(['mcp_sales_create_enabled' => false]);
         $this->actingAs($user, 'web')->get('/oauth/authorize?'.http_build_query($query))->assertForbidden();
+        $this->postJson('/oauth/token', [
+            'grant_type' => 'refresh_token', 'refresh_token' => $issued->json('refresh_token'),
+            'client_id' => 'writer', 'resource' => $query['resource'],
+        ])->assertStatus(400)->assertJsonPath('error', 'invalid_grant');
     }
 }

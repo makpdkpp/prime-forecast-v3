@@ -37,7 +37,7 @@ Skipped, incomplete, risky และ warning ทำให้ไม่ผ่า�
 
 ## Demo acceptance ผ่าน MCP จริง
 
-ทำเฉพาะระบบ Demo ที่ได้รับอนุญาต ใช้ข้อมูลสังเคราะห์ เช่น `MCP-UAT-<run-id>` และ tester ที่อยู่ allowlist
+ทำเฉพาะระบบ Demo ที่ได้รับอนุญาต ใช้ข้อมูลสังเคราะห์ เช่น `MCP-UAT-<run-id>` และ tester ที่เปิดสิทธิ์ MCP Create ในหน้า `/admin/users`
 ต้องใช้บัญชีอย่างน้อย Sales A/B ต่างทีม, Team Admin และ Admin
 บันทึกแต่ละข้อเป็น `PASS/FAIL/PENDING` พร้อมเวลา ผู้ทดสอบ build/commit ของ Laravel และ Node
 และหลักฐานที่ไม่เปิดเผย secret ผล local ไม่ทดแทนหลักฐานเหล่านี้

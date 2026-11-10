@@ -116,7 +116,7 @@ class McpOAuthController extends Controller
         }
         $data['scope'] = implode(' ', array_unique($requestedScopes));
         if (in_array(McpSalesCreateAccess::ABILITY, $requestedScopes, true)) {
-            abort_unless(app(McpSalesCreateAccess::class)->eligible($request->user()), 403, 'This account is not a sales-create tester.');
+            abort_unless(app(McpSalesCreateAccess::class)->eligible($request->user()), 403, 'This account does not have sales-create permission.');
             $nonce = Str::random(48);
             $request->session()->put('mcp_write_consent', ['nonce' => $nonce, 'data' => $data, 'user_id' => $request->user()->user_id, 'expires_at' => now()->addMinutes(10)->timestamp]);
 

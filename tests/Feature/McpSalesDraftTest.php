@@ -44,7 +44,7 @@ class McpSalesDraftTest extends McpGatewayTest
     {
         $id = DB::table('user')->insertGetId(['email' => Str::uuid().'@example.test', 'password' => 'unused', 'role_id' => $role, 'is_active' => true, 'nname' => 'ทดสอบ', 'surename' => 'เซลล์']);
         DB::table('transactional_team')->insert(['user_id' => $id, 'team_id' => 10]);
-        config()->set('services.prime_mcp.sales_create_user_ids', array_merge(config('services.prime_mcp.sales_create_user_ids', []), [$id]));
+        DB::table('user')->where('user_id', $id)->update(['mcp_sales_create_enabled' => true]);
         $user = User::findOrFail($id);
         $token = $user->createToken('write-test', $abilities, now()->addHour());
 
@@ -99,10 +99,10 @@ class McpSalesDraftTest extends McpGatewayTest
         $this->assertDatabaseCount('mcp_sales_drafts', 0);
     }
 
-    public function test_create_is_disabled_outside_allowlist_and_in_production(): void
+    public function test_create_requires_user_permission_global_flag_and_non_production_environment(): void
     {
-        [, $headers] = $this->actor();
-        config()->set('services.prime_mcp.sales_create_user_ids', []);
+        [$user, $headers] = $this->actor();
+        $user->update(['mcp_sales_create_enabled' => false]);
         $this->prepare($headers)->assertForbidden();
         [$user, $headers] = $this->actor();
         config()->set('services.prime_mcp.sales_create_enabled', false);
@@ -139,7 +139,7 @@ class McpSalesDraftTest extends McpGatewayTest
 
     public function test_expiry_revocation_and_team_removal_are_checked_at_confirmation(): void
     {
-        foreach (['expired', 'revoked', 'team_removed'] as $case) {
+        foreach (['expired', 'revoked', 'team_removed', 'permission_removed'] as $case) {
             [$user, $headers] = $this->actor();
             $id = $this->prepare($headers)->assertOk()->json('data.draft_id');
             if ($case === 'expired') {
@@ -151,9 +151,25 @@ class McpSalesDraftTest extends McpGatewayTest
             if ($case === 'team_removed') {
                 DB::table('transactional_team')->where('user_id', $user->user_id)->delete();
             }
+            if ($case === 'permission_removed') {
+                $user->update(['mcp_sales_create_enabled' => false]);
+            }
             $this->flushHeaders()->actingAs($user, 'web')->post('/mcp/sales-drafts/'.$id, ['confirm' => 1])->assertStatus($case === 'expired' ? 410 : 403);
         }
         $this->assertDatabaseCount('transactional', 0);
+    }
+
+    public function test_removing_create_permission_preserves_read_with_existing_token(): void
+    {
+        [$user, $headers] = $this->actor();
+        $user->update(['mcp_sales_create_enabled' => false]);
+        // Even a legacy allowlist entry must not override the Admin setting.
+        config()->set('services.prime_mcp.sales_create_user_ids', [$user->user_id]);
+        $this->prepare($headers)->assertForbidden();
+        $this->app['auth']->forgetGuards();
+        $this->withHeaders($headers)->getJson('/api/mcp/v1/forecast/me')->assertOk();
+        $this->withHeaders($headers)->postJson('/api/mcp/v1/auth/context')
+            ->assertOk()->assertJsonPath('data.permissions', ['forecast.self.read']);
     }
 
     public function test_audit_failure_rolls_back_project_and_confirmation_requires_checkbox(): void

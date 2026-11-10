@@ -5,6 +5,7 @@
          failOnWarning="true" failOnRisky="true" failOnSkipped="true" failOnIncomplete="true">
     <testsuites>
         <testsuite name="MCP preflight">
+            <file>tests/Feature/AdminMcpCreatePermissionTest.php</file>
             <file>tests/Feature/McpGatewayTest.php</file>
             <file>tests/Feature/McpOAuthMetadataTest.php</file>
             <file>tests/Feature/McpSalesDraftTest.php</file>

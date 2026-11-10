@@ -22,7 +22,7 @@ class McpSalesCreateAccess
     {
         return $this->enabled() && $user && $user->is_active && ! $user->deleted_at
             && in_array((int) $user->role_id, [2, 3], true)
-            && in_array((int) $user->user_id, config('services.prime_mcp.sales_create_user_ids', []), true);
+            && $user->mcp_sales_create_enabled;
     }
 
     public function tokenAllowed($token): bool
